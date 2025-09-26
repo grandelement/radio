@@ -1,0 +1,410 @@
+﻿[
+    {
+        "src":  "music/FundamentalGroove_01_Intro.mp3",
+        "title":  "Fundamentalgroove - Intro"
+    },
+    {
+        "src":  "music/FundamentalGroove_02_Prelude.mp3",
+        "title":  "Fundamentalgroove - Prelude"
+    },
+    {
+        "src":  "music/FundamentalGroove_03_Daydream.mp3",
+        "title":  "Fundamentalgroove - Daydream"
+    },
+    {
+        "src":  "music/FundamentalGroove_04_Transport.mp3",
+        "title":  "Fundamentalgroove - Transport"
+    },
+    {
+        "src":  "music/FundamentalGroove_05_TheMovement.mp3",
+        "title":  "Fundamentalgroove - Themovement"
+    },
+    {
+        "src":  "music/FundamentalGroove_06_CrystalBall.mp3",
+        "title":  "Fundamentalgroove - Crystalball"
+    },
+    {
+        "src":  "music/FundamentalGroove_07_FunkyC(FunkyDo).mp3",
+        "title":  "Fundamentalgroove - Funkyc(funkydo)"
+    },
+    {
+        "src":  "music/FundamentalGroove_08_AJsPlace.mp3",
+        "title":  "Fundamentalgroove - Ajsplace"
+    },
+    {
+        "src":  "music/FundamentalGroove_09_RunningMan.mp3",
+        "title":  "Fundamentalgroove - Runningman"
+    },
+    {
+        "src":  "music/FundamentalGroove_10_Automagic.mp3",
+        "title":  "Fundamentalgroove - Automagic"
+    },
+    {
+        "src":  "music/FundamentalGroove_11_InADream.mp3",
+        "title":  "Fundamentalgroove - Inadream"
+    },
+    {
+        "src":  "music/FundamentalGroove_12_Darkroom.mp3",
+        "title":  "Fundamentalgroove - Darkroom"
+    },
+    {
+        "src":  "music/FundamentalGroove_13_NewDay.mp3",
+        "title":  "Fundamentalgroove - Newday"
+    },
+    {
+        "src":  "music/FundamentalGroove_14_TheLastSong.mp3",
+        "title":  "Fundamentalgroove - Thelastsong"
+    },
+    {
+        "src":  "music/FundamentalGroove_15_Siglube.mp3",
+        "title":  "Fundamentalgroove - Siglube"
+    },
+    {
+        "src":  "music/Trio_01_Intro(II).mp3",
+        "title":  "Trio - Intro(ii)"
+    },
+    {
+        "src":  "music/Trio_03_Daydream(II).mp3",
+        "title":  "Trio - Daydream(ii)"
+    },
+    {
+        "src":  "music/Trio_04_Transport(II).mp3",
+        "title":  "Trio - Transport(ii)"
+    },
+    {
+        "src":  "music/Trio_05_TheMovement(II).mp3",
+        "title":  "Trio - Themovement(ii)"
+    },
+    {
+        "src":  "music/Trio_06_FunkySeeFunkyDo(II).mp3",
+        "title":  "Trio - Funkyseefunkydo(ii)"
+    },
+    {
+        "src":  "music/Trio_07_CrystalBall(II).mp3",
+        "title":  "Trio - Crystalball(ii)"
+    },
+    {
+        "src":  "music/Trio_08_RunningMan(II).mp3",
+        "title":  "Trio - Runningman(ii)"
+    },
+    {
+        "src":  "music/Trio_09_Automagic(II).mp3",
+        "title":  "Trio - Automagic(ii)"
+    },
+    {
+        "src":  "music/Trio_10_BeYourself(II).mp3",
+        "title":  "Trio - Beyourself(ii)"
+    },
+    {
+        "src":  "music/Trio_11_Dilerium.mp3",
+        "title":  "Trio - Dilerium"
+    },
+    {
+        "src":  "music/Trio_18_TheNightcrawler.mp3",
+        "title":  "Trio - Thenightcrawler"
+    },
+    {
+        "src":  "music/Live_01_Delirium.mp3",
+        "title":  "Live - Delirium"
+    },
+    {
+        "src":  "music/Live_02_IntroPrelude.mp3",
+        "title":  "Live - Introprelude"
+    },
+    {
+        "src":  "music/Live_04_TheLastSong.mp3",
+        "title":  "Live - Thelastsong"
+    },
+    {
+        "src":  "music/Live_05_Transport.mp3",
+        "title":  "Live - Transport"
+    },
+    {
+        "src":  "music/Live_06_TheMovement.mp3",
+        "title":  "Live - Themovement"
+    },
+    {
+        "src":  "music/Live_07_FunkyC(FunkyDo).mp3",
+        "title":  "Live - Funkyc(funkydo)"
+    },
+    {
+        "src":  "music/Live_08_Autonomy.mp3",
+        "title":  "Live - Autonomy"
+    },
+    {
+        "src":  "music/Live_09_AjsPlace.mp3",
+        "title":  "Live - Ajsplace"
+    },
+    {
+        "src":  "music/Live_10_RunningMan.mp3",
+        "title":  "Live - Runningman"
+    },
+    {
+        "src":  "music/Live_11_Automagic.mp3",
+        "title":  "Live - Automagic"
+    },
+    {
+        "src":  "music/Live_12_Darkroom.mp3",
+        "title":  "Live - Darkroom"
+    },
+    {
+        "src":  "music/Live_13_YouCantChangeMe.mp3",
+        "title":  "Live - Youcantchangeme"
+    },
+    {
+        "src":  "music/SessionsI_01_I=Energy(I).mp3",
+        "title":  "Sessionsi - I=energy(i)"
+    },
+    {
+        "src":  "music/SessionsI_02_Autonomy.mp3",
+        "title":  "Sessionsi - Autonomy"
+    },
+    {
+        "src":  "music/SessionsI_03_Redline.mp3",
+        "title":  "Sessionsi - Redline"
+    },
+    {
+        "src":  "music/SessionsI_04_Transport(III).mp3",
+        "title":  "Sessionsi - Transport(iii)"
+    },
+    {
+        "src":  "music/SessionsI_05_SunDay.mp3",
+        "title":  "Sessionsi - Sunday"
+    },
+    {
+        "src":  "music/SessionsI_06_Soul.mp3",
+        "title":  "Sessionsi - Soul"
+    },
+    {
+        "src":  "music/SessionsI_07_Grace.mp3",
+        "title":  "Sessionsi - Grace"
+    },
+    {
+        "src":  "music/SessionsI_08_Resurection.mp3",
+        "title":  "Sessionsi - Resurection"
+    },
+    {
+        "src":  "music/SessionsII_01_Freedom.mp3",
+        "title":  "Sessionsii - Freedom"
+    },
+    {
+        "src":  "music/SessionsII_02_Prelude(III).mp3",
+        "title":  "Sessionsii - Prelude(iii)"
+    },
+    {
+        "src":  "music/SessionsII_03_SilverDollar.mp3",
+        "title":  "Sessionsii - Silverdollar"
+    },
+    {
+        "src":  "music/SessionsII_04_Beyourself(III).mp3",
+        "title":  "Sessionsii - Beyourself(iii)"
+    },
+    {
+        "src":  "music/SessionsII_05_SoulBeing.mp3",
+        "title":  "Sessionsii - Soulbeing"
+    },
+    {
+        "src":  "music/SessionsII_06_Awake.mp3",
+        "title":  "Sessionsii - Awake"
+    },
+    {
+        "src":  "music/SessionsII_07_YouCantChangeMe(II).mp3",
+        "title":  "Sessionsii - Youcantchangeme(ii)"
+    },
+    {
+        "src":  "music/Intergy_01_StayInUnion.mp3",
+        "title":  "Intergy - Stayinunion"
+    },
+    {
+        "src":  "music/Intergy_02_Intergy.mp3",
+        "title":  "Intergy - Intergy"
+    },
+    {
+        "src":  "music/Intergy_03_Amuse.mp3",
+        "title":  "Intergy - Amuse"
+    },
+    {
+        "src":  "music/Intergy_04_Heartful.mp3",
+        "title":  "Intergy - Heartful"
+    },
+    {
+        "src":  "music/Intergy_05_Teleportation.mp3",
+        "title":  "Intergy - Teleportation"
+    },
+    {
+        "src":  "music/Intergy_06_YouCantChangeMe.mp3",
+        "title":  "Intergy - Youcantchangeme"
+    },
+    {
+        "src":  "music/Intergy_07_Selfishteem.mp3",
+        "title":  "Intergy - Selfishteem"
+    },
+    {
+        "src":  "music/Intergy_08_Rebirth.mp3",
+        "title":  "Intergy - Rebirth"
+    },
+    {
+        "src":  "music/Intergy_09_Creature.mp3",
+        "title":  "Intergy - Creature"
+    },
+    {
+        "src":  "music/Intergy_10_Prelude.mp3",
+        "title":  "Intergy - Prelude"
+    },
+    {
+        "src":  "music/Intergy_11_MusicBox.mp3",
+        "title":  "Intergy - Musicbox"
+    },
+    {
+        "src":  "music/Love_01_I=Energy.mp3",
+        "title":  "Love - I=energy"
+    },
+    {
+        "src":  "music/Love_02_BeYourself.mp3",
+        "title":  "Love - Beyourself"
+    },
+    {
+        "src":  "music/Love_03_TheDelivery.mp3",
+        "title":  "Love - Thedelivery"
+    },
+    {
+        "src":  "music/Love_04_Love.mp3",
+        "title":  "Love - Love"
+    },
+    {
+        "src":  "music/Love_05_Free.mp3",
+        "title":  "Love - Free"
+    },
+    {
+        "src":  "music/Love_06_BeFree.mp3",
+        "title":  "Love - Befree"
+    },
+    {
+        "src":  "music/Love_07_Entrance.mp3",
+        "title":  "Love - Entrance"
+    },
+    {
+        "src":  "music/Love_08_RevelAtions.mp3",
+        "title":  "Love - Revelations"
+    },
+    {
+        "src":  "music/Soul_01_Sunbeam.mp3",
+        "title":  "Soul - Sunbeam"
+    },
+    {
+        "src":  "music/Soul_02_Halo.mp3",
+        "title":  "Soul - Halo"
+    },
+    {
+        "src":  "music/Soul_03_Lovelorn.mp3",
+        "title":  "Soul - Lovelorn"
+    },
+    {
+        "src":  "music/Soul_04_Intuition.mp3",
+        "title":  "Soul - Intuition"
+    },
+    {
+        "src":  "music/Soul_05_FlameofCreation.mp3",
+        "title":  "Soul - Flameofcreation"
+    },
+    {
+        "src":  "music/Soul_06_FamilyTree.mp3",
+        "title":  "Soul - Familytree"
+    },
+    {
+        "src":  "music/Soul_07_DogsDay.mp3",
+        "title":  "Soul - Dogsday"
+    },
+    {
+        "src":  "music/Soul_08_EmeraldGreen.mp3",
+        "title":  "Soul - Emeraldgreen"
+    },
+    {
+        "src":  "music/Soul_09_MoonHorizon.mp3",
+        "title":  "Soul - Moonhorizon"
+    },
+    {
+        "src":  "music/Soul_10_BeHereNow.mp3",
+        "title":  "Soul - Beherenow"
+    },
+    {
+        "src":  "music/Spirit_01_CosmicSunrise.mp3",
+        "title":  "Spirit - Cosmicsunrise"
+    },
+    {
+        "src":  "music/Spirit_02_Awakenings.mp3",
+        "title":  "Spirit - Awakenings"
+    },
+    {
+        "src":  "music/Spirit_03_WalkontheMoon.mp3",
+        "title":  "Spirit - Walkonthemoon"
+    },
+    {
+        "src":  "music/Spirit_04_CelestialDance.mp3",
+        "title":  "Spirit - Celestialdance"
+    },
+    {
+        "src":  "music/Spirit_05_YingYangUniverse.mp3",
+        "title":  "Spirit - Yingyanguniverse"
+    },
+    {
+        "src":  "music/Fire_01_Alignment.mp3",
+        "title":  "Fire - Alignment"
+    },
+    {
+        "src":  "music/Fire_02_TheFire.mp3",
+        "title":  "Fire - Thefire"
+    },
+    {
+        "src":  "music/Fire_03_Dawning.mp3",
+        "title":  "Fire - Dawning"
+    },
+    {
+        "src":  "music/Fire_04_Spark.mp3",
+        "title":  "Fire - Spark"
+    },
+    {
+        "src":  "music/Fire_05_Arrival.mp3",
+        "title":  "Fire - Arrival"
+    },
+    {
+        "src":  "music/Fire_06_Smoke.mp3",
+        "title":  "Fire - Smoke"
+    },
+    {
+        "src":  "music/Fire_07_Wildfire.mp3",
+        "title":  "Fire - Wildfire"
+    },
+    {
+        "src":  "music/Fire_08_Transformation.mp3",
+        "title":  "Fire - Transformation"
+    },
+    {
+        "src":  "music/Fire_09_Grounding.mp3",
+        "title":  "Fire - Grounding"
+    },
+    {
+        "src":  "music/Fire_10_Releasure.mp3",
+        "title":  "Fire - Releasure"
+    },
+    {
+        "src":  "music/Fire_11_TheSource.mp3",
+        "title":  "Fire - Thesource"
+    },
+    {
+        "src":  "music/Singles_11Twisted(4heroCover).mp3",
+        "title":  "Singles - Twisted(4herocover)"
+    },
+    {
+        "src":  "music/Singles_CrystalBall.mp3",
+        "title":  "Singles - Crystalball"
+    },
+    {
+        "src":  "music/Singles_I=Energy.mp3",
+        "title":  "Singles - I=energy"
+    },
+    {
+        "src":  "music/Singles_MeaningofLove.mp3",
+        "title":  "Singles - Meaningoflove"
+    }
+]

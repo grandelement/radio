@@ -1,0 +1,17 @@
+﻿# ALBUM_RELEASE_ORDER.txt
+# One album name per line, top = first in your radio sequence.
+# Edit this file to your release order. New albums are auto-appended next run.
+# Lines starting with # are ignored.
+
+
+FundamentalGroove
+Trio
+Live
+Sessionsi
+Sessionsii
+Intergy
+Love
+Soul
+Spirit
+Fire
+Singles
