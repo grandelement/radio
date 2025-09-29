@@ -1,9 +1,5 @@
 ﻿[
     {
-        "src":  "music/FundamentalGroove_01_Intro.mp3",
-        "title":  "Fundamentalgroove - Intro"
-    },
-    {
         "src":  "music/FundamentalGroove_02_Prelude.mp3",
         "title":  "Fundamentalgroove - Prelude"
     },
@@ -60,24 +56,8 @@
         "title":  "Fundamentalgroove - Siglube"
     },
     {
-        "src":  "music/Trio_01_Intro(II).mp3",
-        "title":  "Trio - Intro(ii)"
-    },
-    {
         "src":  "music/Trio_03_Daydream(II).mp3",
         "title":  "Trio - Daydream(ii)"
-    },
-    {
-        "src":  "music/Trio_04_Transport(II).mp3",
-        "title":  "Trio - Transport(ii)"
-    },
-    {
-        "src":  "music/Trio_05_TheMovement(II).mp3",
-        "title":  "Trio - Themovement(ii)"
-    },
-    {
-        "src":  "music/Trio_06_FunkySeeFunkyDo(II).mp3",
-        "title":  "Trio - Funkyseefunkydo(ii)"
     },
     {
         "src":  "music/Trio_07_CrystalBall(II).mp3",
