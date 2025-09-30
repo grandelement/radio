@@ -12,7 +12,6 @@
       font-family:system-ui, Segoe UI, Roboto, Arial, sans-serif;
       display:flex; overflow-x:hidden; background:#000;
     }
-    /* background layer */
     body::before{
       content:""; position:fixed; inset:0; z-index:-1;
       background:#000 center/cover no-repeat fixed;
@@ -36,14 +35,11 @@
 
     .controls{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:8px 0 8px}
     .btn{ appearance:none; border:0; padding:10px 14px; border-radius:10px;
-          background:#141d2b; color:#eaf6ff; cursor:pointer; font-weight:600;
+          background:var(--muted); color:#eaf6ff; cursor:pointer; font-weight:600;
           border:1px solid rgba(255,255,255,.12); }
-    .btn:hover{background:#1b2537}
-    .btn.primary{ background:var(--accent); color:#03111b; border-color:transparent; }
-    .btn.primary[aria-pressed="true"]{ filter:brightness(1.05); box-shadow:0 0 0 2px rgba(94,197,255,.35) inset; }
-    .btn.alt{ background:var(--muted); }
-    .btn.alt[aria-pressed="true"]{ background:#26324a; box-shadow:0 0 0 2px rgba(255,255,255,.15) inset; }
-
+    .btn:hover{background:#222e45}
+    .btn.active{ background:var(--accent); color:#03111b; border-color:transparent; }
+    .btn.primary{ background:var(--accent2); color:#fff; }
     audio{ width:100%; margin-top:8px; transform: scale(1.25); transform-origin: center top; }
     a.button{ display:inline-block; padding:10px 18px; margin-top:14px; background:var(--accent2);
               color:#fff; text-decoration:none; border-radius:10px; font-weight:700;
@@ -53,21 +49,19 @@
 </head>
 <body>
   <div class="wrap">
-    <!-- Make sure /img/logo.png exists -->
     <img class="logo" src="img/logo.png" alt="Grand Element" />
 
     <h1>Grand Element Radio</h1>
     <p class="subtitle">Music created to help set your soul free. Enjoy!!</p>
 
-    <!-- Nice title (Album • Track) -->
     <div class="titlebar" id="titlebar"></div>
 
     <div class="panel">
       <div class="controls">
-        <button class="btn alt" id="orderBtn" aria-pressed="false" title="Album order">Album order</button>
-        <button class="btn primary" id="shuffleBtn" aria-pressed="true" title="Shuffle">Shuffle</button>
         <button class="btn" id="prevBtn" title="Previous (Left Arrow)">Prev</button>
-        <button class="btn primary" id="nextBtn" title="Next (Right Arrow)">Next</button>
+        <button class="btn" id="nextBtn" title="Next (Right Arrow)">Next</button>
+        <button class="btn active" id="shuffleBtn" title="Shuffle">Shuffle</button>
+        <button class="btn" id="orderBtn" title="Album order">Album order</button>
       </div>
       <audio id="player" controls preload="none"></audio>
     </div>
@@ -76,43 +70,43 @@
   </div>
 
   <script>
-    // --- Background: new random each refresh, cache-bust, simple fallback ---
-    (function(){
-      fetch('backgrounds.json', {cache:'no-store'})
-        .then(r => r.ok ? r.json() : [])
-        .then(list => {
-          if (!Array.isArray(list) || !list.length) return;
-          const last = sessionStorage.getItem('lastBg');
-          let pick = list[Math.floor(Math.random() * list.length)];
-          if (list.length > 1 && pick === last) {
-            const i = list.indexOf(pick);
-            pick = list[(i + 1) % list.length];
-          }
-          const url = pick + '?v=' + Date.now();
-          const img = new Image();
-          img.onload  = () => { document.body.style.setProperty('--bg-img', 'url("' + url + '")'); sessionStorage.setItem('lastBg', pick); };
-          img.onerror = () => { document.body.style.setProperty('--bg-img', 'url("' + pick + '")'); };
-          img.src = pick;
-        })
-        .catch(()=>{});
-    })();
+    // --- Background ---
+    fetch('backgrounds.json', {cache:'no-store'})
+      .then(r => r.ok ? r.json() : [])
+      .then(list => {
+        if (!Array.isArray(list) || !list.length) return;
+        const last = sessionStorage.getItem('lastBg');
+        let pick = list[Math.floor(Math.random() * list.length)];
+        if (list.length > 1 && pick === last) {
+          const i = list.indexOf(pick);
+          pick = list[(i + 1) % list.length];
+        }
+        const url = pick + '?v=' + Date.now();
+        const img = new Image();
+        img.onload  = () => { document.body.style.setProperty('--bg-img', 'url("' + url + '")'); sessionStorage.setItem('lastBg', pick); };
+        img.onerror = () => { document.body.style.setProperty('--bg-img', 'url("' + pick + '")'); };
+        img.src = pick;
+      })
+      .catch(()=>{});
 
     // --- Player ---
     const audio = document.getElementById('player');
     const titlebar = document.getElementById('titlebar');
     const shuffleBtn = document.getElementById('shuffleBtn');
-    const orderBtn = document.getElementById('orderBtn');
-    const nextBtn = document.getElementById('nextBtn');
-    const prevBtn = document.getElementById('prevBtn');
+    const orderBtn   = document.getElementById('orderBtn');
+    const nextBtn    = document.getElementById('nextBtn');
+    const prevBtn    = document.getElementById('prevBtn');
 
     let items=[], library=[], titleMap=new Map(), order=[], i=0, shuffleOn=true;
 
     function prettyTitle(p){
-      return p.split('/').pop()
-              .replace(/\.[^.]+$/,'')
-              .replace(/[_-]+/g,' ')   // restore spaces
-              .replace(/\s+/g,' ')
-              .trim();
+      let t = p.split('/').pop().replace(/\.[^.]+$/,'');
+      // turn underscores/dashes/camelCase into spaces
+      t = t.replace(/[_-]+/g,' ')
+           .replace(/([a-z])([A-Z])/g,'$1 $2')
+           .replace(/\s+/g,' ')
+           .trim();
+      return t;
     }
     function displayTitle(src){
       const t = titleMap.get(src) || prettyTitle(src);
@@ -131,24 +125,19 @@
       for(let k=a.length-1;k>0;k--){const j=(Math.random()*(k+1))|0; [a[k],a[j]]=[a[j],a[k]]}
       return a;
     }
-    function setToggleUI(){
-      shuffleBtn.setAttribute('aria-pressed', String(shuffleOn));
-      orderBtn.setAttribute('aria-pressed', String(!shuffleOn));
-    }
     function setOrder(){
       const current = audio.src ? library.find(p => audio.src.includes(p)) : null;
       order = shuffleOn ? shuffle(library) : library.slice();
       if (current){ const keep = order.indexOf(current); i = keep >= 0 ? keep : 0; } else { i = 0; }
-      setToggleUI();
+      updateButtons();
     }
     function loadTrack(idx){
       if (!order.length) return;
       i = (idx + order.length) % order.length;
       const src = order[i];
-      audio.src = src + '?v=' + Date.now(); // cache-bust so scrubbing works across updates
+      audio.src = src + '?v=' + Date.now();
       updateTitle(src);
 
-      // Media Session (lock screen controls)
       if ('mediaSession' in navigator) {
         const t = displayTitle(src);
         navigator.mediaSession.metadata = new MediaMetadata({
@@ -158,21 +147,23 @@
         });
         try{navigator.mediaSession.setActionHandler('previoustrack',()=>loadTrack(i-1))}catch(e){}
         try{navigator.mediaSession.setActionHandler('nexttrack',()=>loadTrack(i+1))}catch(e){}
-        try{navigator.mediaSession.setActionHandler('play',()=>audio.play())}catch(e){}
-        try{navigator.mediaSession.setActionHandler('pause',()=>audio.pause())}catch(e){}
       }
 
-      // Try to autoplay silently; if blocked, user uses native play—no overlay/prompt shown
-      audio.play().catch(()=>{});
+      audio.play().catch(()=>{}); // autoplay attempt
+    }
+    function updateButtons(){
+      if (shuffleOn) {
+        shuffleBtn.classList.add('active'); orderBtn.classList.remove('active');
+      } else {
+        orderBtn.classList.add('active'); shuffleBtn.classList.remove('active');
+      }
     }
 
-    // Controls
     nextBtn.addEventListener('click', ()=> loadTrack(i+1));
     prevBtn.addEventListener('click', ()=> loadTrack(i-1));
-    shuffleBtn.addEventListener('click', ()=>{ shuffleOn = true;  setOrder(); });
-    orderBtn .addEventListener('click', ()=>{ shuffleOn = false; setOrder(); });
+    shuffleBtn.addEventListener('click', ()=>{ shuffleOn=true;  setOrder(); });
+    orderBtn.addEventListener('click',   ()=>{ shuffleOn=false; setOrder(); });
 
-    // Keyboard next/prev
     window.addEventListener('keydown', e => {
       if(e.key==='ArrowRight'){ e.preventDefault(); loadTrack(i+1); }
       if(e.key==='ArrowLeft'){  e.preventDefault(); loadTrack(i-1); }
@@ -188,8 +179,7 @@
       titleMap = new Map(items.map(o => [o.src, o.title]));
       setOrder();
       loadTrack(i);
-
-      // Also try to start on first interaction (helps Safari/iOS)
+      // retry autoplay on first interaction (needed for iOS)
       window.addEventListener('pointerdown', ()=> audio.play().catch(()=>{}), {once:true});
       window.addEventListener('keydown',     ()=> audio.play().catch(()=>{}), {once:true});
     })().catch(err=>{
