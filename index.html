@@ -5,27 +5,27 @@
   <title>Grand Element Radio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root { --fg:#eaf6ff; --accent:#5ec5ff; --accent2:#ff6a00; }
+    :root { --fg:#eaf6ff; --accent:#5ec5ff; --accent2:#ff6a00; --muted:#1b2537; }
     *{box-sizing:border-box} html,body{height:100%}
     body{
       margin:0; min-height:100vh; color:var(--fg);
       font-family:system-ui, Segoe UI, Roboto, Arial, sans-serif;
       display:flex; overflow-x:hidden; background:#000;
     }
-    /* wallpaper layer */
+    /* background layer */
     body::before{
       content:""; position:fixed; inset:0; z-index:-1;
       background:#000 center/cover no-repeat fixed;
       background-image: var(--bg-img, none);
-      transition: opacity .4s ease;
-      opacity: 1;
     }
     .wrap{ margin:auto; width:min(980px,94vw); padding:28px; text-align:center; }
     .logo{ width:min(260px,60vw); height:auto; border-radius:50%;
-           filter: drop-shadow(0 0 24px rgba(94,197,255,.55)); margin:4px 0 12px; }
+           filter: drop-shadow(0 0 24px rgba(94,197,255,.55));
+           margin:4px 0 12px; }
     h1{margin:8px 0 2px; font-weight:700; letter-spacing:.3px}
     .subtitle{opacity:.9;margin:2px 0 16px}
     .titlebar{ margin: 8px 0 14px; font-weight:700; font-size:1.05rem; }
+
     .panel{
       background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
       border:1px solid rgba(255,255,255,.10);
@@ -33,26 +33,22 @@
       box-shadow: 0 10px 30px rgba(0,0,0,.45);
       backdrop-filter: blur(2px);
     }
-    .controls{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:8px 0 8px}
-    .btn{ appearance:none; border:0; padding:10px 14px; border-radius:10px; background:#141d2b; color:#eaf6ff;
-          cursor:pointer; font-weight:600; border:1px solid rgba(255,255,255,.12); }
-    .btn:hover{background:#1b2537}
-    .btn.accent{ background:var(--accent); color:#03111b; border-color:transparent; }
-    .btn.accent:hover{ filter:brightness(1.05) }
-    audio{ width:100%; margin-top:8px; transform: scale(1.25); transform-origin: center top; }
-    a.button{ display:inline-block; padding:10px 18px; margin-top:14px; background:var(--accent2); color:#fff; text-decoration:none; border-radius:10px; font-weight:700; box-shadow: 0 6px 16px rgba(255,106,0,.25); }
-    a.button:hover{ filter:brightness(1.05) }
 
-    /* One-tap overlay when autoplay is blocked */
-    .overlay{
-      position: fixed; inset:0; background: rgba(0,0,0,.6);
-      display:none; align-items:center; justify-content:center; z-index: 10;
-    }
-    .overlay .bigplay{
-      font-size:1.2rem; padding:14px 20px; border-radius:12px;
-      background:var(--accent); color:#03111b; border:0; cursor:pointer; font-weight:800;
-      box-shadow: 0 10px 30px rgba(0,0,0,.45);
-    }
+    .controls{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:8px 0 8px}
+    .btn{ appearance:none; border:0; padding:10px 14px; border-radius:10px;
+          background:#141d2b; color:#eaf6ff; cursor:pointer; font-weight:600;
+          border:1px solid rgba(255,255,255,.12); }
+    .btn:hover{background:#1b2537}
+    .btn.primary{ background:var(--accent); color:#03111b; border-color:transparent; }
+    .btn.primary[aria-pressed="true"]{ filter:brightness(1.05); box-shadow:0 0 0 2px rgba(94,197,255,.35) inset; }
+    .btn.alt{ background:var(--muted); }
+    .btn.alt[aria-pressed="true"]{ background:#26324a; box-shadow:0 0 0 2px rgba(255,255,255,.15) inset; }
+
+    audio{ width:100%; margin-top:8px; transform: scale(1.25); transform-origin: center top; }
+    a.button{ display:inline-block; padding:10px 18px; margin-top:14px; background:var(--accent2);
+              color:#fff; text-decoration:none; border-radius:10px; font-weight:700;
+              box-shadow: 0 6px 16px rgba(255,106,0,.25); }
+    a.button:hover{ filter:brightness(1.05) }
   </style>
 </head>
 <body>
@@ -63,14 +59,15 @@
     <h1>Grand Element Radio</h1>
     <p class="subtitle">Music created to help set your soul free. Enjoy!!</p>
 
-    <!-- Nicely formatted title (Album • Track) -->
+    <!-- Nice title (Album • Track) -->
     <div class="titlebar" id="titlebar"></div>
 
     <div class="panel">
       <div class="controls">
+        <button class="btn alt" id="orderBtn" aria-pressed="false" title="Album order">Album order</button>
+        <button class="btn primary" id="shuffleBtn" aria-pressed="true" title="Shuffle">Shuffle</button>
         <button class="btn" id="prevBtn" title="Previous (Left Arrow)">Prev</button>
-        <button class="btn accent" id="nextBtn" title="Next (Right Arrow)">Next</button>
-        <button class="btn" id="shuffleBtn" title="Toggle Shuffle">Shuffle: <span id="shufState">On</span></button>
+        <button class="btn primary" id="nextBtn" title="Next (Right Arrow)">Next</button>
       </div>
       <audio id="player" controls preload="none"></audio>
     </div>
@@ -78,13 +75,8 @@
     <a class="button" href="https://grandelement.bandcamp.com" target="_blank" rel="noopener">Buy on Bandcamp</a>
   </div>
 
-  <!-- Autoplay unlock overlay -->
-  <div class="overlay" id="overlay">
-    <button class="bigplay" id="bigPlay">▶ Play Grand Element Radio</button>
-  </div>
-
   <script>
-    // --- Robust background picker on each refresh (preload + fallback, no black screen) ---
+    // --- Background: new random each refresh, cache-bust, simple fallback ---
     (function(){
       fetch('backgrounds.json', {cache:'no-store'})
         .then(r => r.ok ? r.json() : [])
@@ -96,18 +88,10 @@
             const i = list.indexOf(pick);
             pick = list[(i + 1) % list.length];
           }
-          // preload image first, then apply. Cache-bust to avoid stale frames.
           const url = pick + '?v=' + Date.now();
           const img = new Image();
-          img.onload = () => {
-            document.body.style.setProperty('--bg-img', 'url("' + url + '")');
-            sessionStorage.setItem('lastBg', pick);
-          };
-          img.onerror = () => {
-            // fallback: first valid in list without preload (best effort)
-            const fallback = list.find(x => x !== pick) || pick;
-            document.body.style.setProperty('--bg-img', 'url("' + fallback + '")');
-          };
+          img.onload  = () => { document.body.style.setProperty('--bg-img', 'url("' + url + '")'); sessionStorage.setItem('lastBg', pick); };
+          img.onerror = () => { document.body.style.setProperty('--bg-img', 'url("' + pick + '")'); };
           img.src = pick;
         })
         .catch(()=>{});
@@ -116,8 +100,8 @@
     // --- Player ---
     const audio = document.getElementById('player');
     const titlebar = document.getElementById('titlebar');
-    const shufBtn = document.getElementById('shuffleBtn');
-    const shufStateEl = document.getElementById('shufState');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+    const orderBtn = document.getElementById('orderBtn');
     const nextBtn = document.getElementById('nextBtn');
     const prevBtn = document.getElementById('prevBtn');
 
@@ -126,13 +110,12 @@
     function prettyTitle(p){
       return p.split('/').pop()
               .replace(/\.[^.]+$/,'')
-              .replace(/[_-]+/g,' ')
+              .replace(/[_-]+/g,' ')   // restore spaces
               .replace(/\s+/g,' ')
               .trim();
     }
     function displayTitle(src){
       const t = titleMap.get(src) || prettyTitle(src);
-      // If title is "Album - Track", format nicely
       const parts = t.split(' - ');
       if (parts.length >= 2) {
         return { album: parts[0].trim(), track: parts.slice(1).join(' - ').trim() };
@@ -148,18 +131,24 @@
       for(let k=a.length-1;k>0;k--){const j=(Math.random()*(k+1))|0; [a[k],a[j]]=[a[j],a[k]]}
       return a;
     }
+    function setToggleUI(){
+      shuffleBtn.setAttribute('aria-pressed', String(shuffleOn));
+      orderBtn.setAttribute('aria-pressed', String(!shuffleOn));
+    }
     function setOrder(){
       const current = audio.src ? library.find(p => audio.src.includes(p)) : null;
       order = shuffleOn ? shuffle(library) : library.slice();
       if (current){ const keep = order.indexOf(current); i = keep >= 0 ? keep : 0; } else { i = 0; }
+      setToggleUI();
     }
     function loadTrack(idx){
       if (!order.length) return;
       i = (idx + order.length) % order.length;
       const src = order[i];
-      audio.src = src + '?v=' + Date.now(); // bust caches
+      audio.src = src + '?v=' + Date.now(); // cache-bust so scrubbing works across updates
       updateTitle(src);
-      // Media Session metadata for lock-screen controls
+
+      // Media Session (lock screen controls)
       if ('mediaSession' in navigator) {
         const t = displayTitle(src);
         navigator.mediaSession.metadata = new MediaMetadata({
@@ -172,40 +161,38 @@
         try{navigator.mediaSession.setActionHandler('play',()=>audio.play())}catch(e){}
         try{navigator.mediaSession.setActionHandler('pause',()=>audio.pause())}catch(e){}
       }
-      audio.play().catch(()=>{}); // attempt autoplay; if blocked, overlay will handle
+
+      // Try to autoplay silently; if blocked, user uses native play—no overlay/prompt shown
+      audio.play().catch(()=>{});
     }
 
-    // Attempt to autoplay on load; if blocked, show overlay
-    const overlay = document.getElementById('overlay');
-    const bigPlay = document.getElementById('bigPlay');
-    function tryAutoplay(){
-      audio.play().then(()=>{ overlay.style.display='none'; }).catch(()=>{
-        overlay.style.display='flex';
-      });
-    }
-    bigPlay.addEventListener('click', ()=>{ overlay.style.display='none'; audio.play().catch(()=>{}); });
-
-    audio.addEventListener('ended', ()=> loadTrack(i+1));
+    // Controls
     nextBtn.addEventListener('click', ()=> loadTrack(i+1));
     prevBtn.addEventListener('click', ()=> loadTrack(i-1));
-    shufBtn.addEventListener('click', ()=>{ shuffleOn = !shuffleOn; shufStateEl.textContent = shuffleOn ? 'On' : 'Off'; setOrder(); });
+    shuffleBtn.addEventListener('click', ()=>{ shuffleOn = true;  setOrder(); });
+    orderBtn .addEventListener('click', ()=>{ shuffleOn = false; setOrder(); });
+
+    // Keyboard next/prev
+    window.addEventListener('keydown', e => {
+      if(e.key==='ArrowRight'){ e.preventDefault(); loadTrack(i+1); }
+      if(e.key==='ArrowLeft'){  e.preventDefault(); loadTrack(i-1); }
+    });
 
     // Boot
     (async function boot(){
       const r = await fetch('playlist.json',{cache:'no-store'});
       if(!r.ok) throw new Error('playlist.json not found');
       const raw = await r.json();
-      items = raw.map(x => typeof x==='string' ? ({src:x, title:null}) : x);
-      library = items.map(o => o.src);
+      items    = raw.map(x => typeof x==='string' ? ({src:x, title:null}) : x);
+      library  = items.map(o => o.src);
       titleMap = new Map(items.map(o => [o.src, o.title]));
       setOrder();
       loadTrack(i);
-      // Try autoplay now and also on first user interaction
-      tryAutoplay();
-      window.addEventListener('pointerdown', tryAutoplay, {once:true});
-      window.addEventListener('keydown', tryAutoplay, {once:true});
+
+      // Also try to start on first interaction (helps Safari/iOS)
+      window.addEventListener('pointerdown', ()=> audio.play().catch(()=>{}), {once:true});
+      window.addEventListener('keydown',     ()=> audio.play().catch(()=>{}), {once:true});
     })().catch(err=>{
-      overlay.style.display = 'none';
       titlebar.textContent = 'Error: '+err.message;
     });
   </script>
