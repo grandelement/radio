@@ -1,0 +1,116 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Grand Element Radio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --fg:#eaf6ff; --accent:#5ec5ff; --accent2:#ff6a00; }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{ margin:0; min-height:100vh; color:var(--fg);
+          font-family:system-ui, Segoe UI, Roboto, Arial, sans-serif;
+          display:flex; overflow-x:hidden; }
+    body::before{ content:""; position:fixed; inset:0; z-index:-1;
+      background:#000 center/cover no-repeat fixed;
+      background-image: var(--bg-img, none);
+    }
+    .wrap{ margin:auto; width:min(980px,94vw); padding:28px; text-align:center; }
+    .logo{ width:min(260px,60vw); height:auto; border-radius:50%;
+           filter: drop-shadow(0 0 24px rgba(94,197,255,.55));
+           margin:4px 0 12px; }
+    h1{margin:8px 0 2px; font-weight:700; letter-spacing:.3px}
+    p.help{opacity:.90;margin:2px 0 16px}
+    .panel{ background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+            border:1px solid rgba(255,255,255,.10); border-radius:16px; padding:16px 14px;
+            box-shadow: 0 10px 30px rgba(0,0,0,.45); backdrop-filter: blur(2px); }
+    .now{font-weight:600; margin:8px 0 10px; font-size:1.06rem}
+    .controls{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:8px 0 8px}
+    .btn{ appearance:none; border:0; padding:10px 14px; border-radius:10px;
+          background:#141d2b; color:#eaf6ff; cursor:pointer; font-weight:600;
+          border:1px solid rgba(255,255,255,.12); }
+    .btn:hover{background:#1b2537}
+    .btn.accent{ background:var(--accent); color:#03111b; border-color:transparent; }
+    .btn.accent:hover{ filter:brightness(1.05) }
+    .pill{padding:8px 12px; border-radius:999px; background:#0f1826; display:inline-block;
+          font-size:.9rem; opacity:.95; border:1px solid rgba(255,255,255,.12)}
+    audio{ width:100%; margin-top:8px; transform: scale(1.25); transform-origin: center top; }
+    a.button{ display:inline-block; padding:10px 18px; margin-top:14px; background:var(--accent2);
+              color:#fff; text-decoration:none; border-radius:10px; font-weight:700;
+              box-shadow: 0 6px 16px rgba(255,106,0,.25); }
+    a.button:hover{ filter:brightness(1.05) }
+    .err{color:#ff8a8a; margin-top:10px} .ok{opacity:.85; font-size:.95rem; margin-top:6px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Logo (make sure /img/logo.png exists) -->
+    <img class="logo" src="img/logo.png" alt="Grand Element" />
+
+    <h1>Grand Element Radio</h1>
+    <p class="help">Music created to help set your soul free. Enjoy!!</p>
+
+    <div class="panel">
+      <div class="now" id="now">Loading...</div>
+      <div class="controls">
+        <button class="btn" id="prevBtn" title="Previous (Left Arrow)">Prev</button>
+        <button class="btn accent" id="nextBtn" title="Next (Right Arrow)">Next</button>
+        <button class="btn" id="shuffleBtn" title="Toggle Shuffle">Shuffle: <span id="shufState">On</span></button>
+        <span class="pill" id="counter">0 / 0</span>
+      </div>
+      <audio id="player" controls preload="none"></audio>
+      <div id="msg" class="ok"></div>
+    </div>
+
+    <a class="button" href="https://grandelement.bandcamp.com" target="_blank" rel="noopener">Buy on Bandcamp</a>
+  </div>
+
+  <script>
+    // --- Pick a new random background on each refresh ---
+    fetch('backgrounds.json', {cache:'no-store'})
+      .then(r => r.ok ? r.json() : [])
+      .then(list => {
+        if (!Array.isArray(list) || !list.length) return;
+        const last = sessionStorage.getItem('lastBg');
+        let pick = list[Math.floor(Math.random() * list.length)];
+        if (list.length > 1 && pick === last) {
+          const i = list.indexOf(pick);
+          pick = list[(i + 1) % list.length];
+        }
+        document.body.style.setProperty('--bg-img', 'url("' + pick + '?v=' + Date.now() + '")');
+        sessionStorage.setItem('lastBg', pick);
+      })
+      .catch(()=>{});
+
+    // --- Player ---
+    const audio=document.getElementById('player'), nowEl=document.getElementById('now'), counterEl=document.getElementById('counter');
+    const shufBtn=document.getElementById('shuffleBtn'), shufStateEl=document.getElementById('shufState');
+    const nextBtn=document.getElementById('nextBtn'), prevBtn=document.getElementById('prevBtn'), msg=document.getElementById('msg');
+
+    let items=[], library=[], titleMap=new Map(), order=[], i=0, shuffleOn=true;
+    function prettyTitle(p){ return p.split('/').pop().replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').trim(); }
+    function displayTitle(src){ return titleMap.get(src) || prettyTitle(src); }
+    function shuffle(arr){ const a=arr.slice(); for(let k=a.length-1;k>0;k--){const j=(Math.random()*(k+1))|0; [a[k],a[j]]=[a[j],a[k]]} return a; }
+    function setOrder(){ const cur=audio.src?library.find(p=>audio.src.includes(p)):null; order=shuffleOn?shuffle(library):library.slice();
+      if(cur){ const keep=order.indexOf(cur); i=keep>=0?keep:0; } else { i=0; } counterEl.textContent=(order.length?(i+1)+' / '+order.length:'0 / 0'); }
+    function loadTrack(idx){ if(!order.length){ nowEl.textContent='No tracks loaded'; return; } i=(idx+order.length)%order.length;
+      const src=order[i]; audio.src=src+'?v='+Date.now(); nowEl.textContent='Now playing: '+displayTitle(src); counterEl.textContent=(i+1)+' / '+order.length;
+      if('mediaSession' in navigator){ navigator.mediaSession.metadata=new MediaMetadata({title:displayTitle(src),artist:'Grand Element',album:'Grand Element Radio'}); 
+        try{navigator.mediaSession.setActionHandler('previoustrack',()=>loadTrack(i-1))}catch(e){} try{navigator.mediaSession.setActionHandler('nexttrack',()=>loadTrack(i+1))}catch(e){}
+        try{navigator.mediaSession.setActionHandler('play',()=>audio.play())}catch(e){} try{navigator.mediaSession.setActionHandler('pause',()=>audio.pause())}catch(e){}
+      }
+      audio.play().catch(()=>{}); }
+    audio.addEventListener('play', ()=>{ if(navigator.mediaSession) navigator.mediaSession.playbackState='playing'; });
+    audio.addEventListener('pause', ()=>{ if(navigator.mediaSession) navigator.mediaSession.playbackState='paused'; });
+    async function boot(){
+      const r=await fetch('playlist.json',{cache:'no-store'}); if(!r.ok) throw new Error('playlist.json not found');
+      const raw=await r.json(); items=raw.map(x=>typeof x==='string'?({src:x, title:null}):x);
+      library=items.map(o=>o.src); titleMap=new Map(items.map(o=>[o.src,o.title])); msg.textContent='Loaded '+items.length+' tracks';
+      setOrder(); loadTrack(i);
+      audio.addEventListener('ended',()=>loadTrack(i+1)); nextBtn.addEventListener('click',()=>loadTrack(i+1)); prevBtn.addEventListener('click',()=>loadTrack(i-1));
+      shufBtn.addEventListener('click',()=>{ shuffleOn=!shuffleOn; shufStateEl.textContent=shuffleOn?'On':'Off'; setOrder(); });
+      window.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'){e.preventDefault();loadTrack(i+1)} if(e.key==='ArrowLeft'){e.preventDefault();loadTrack(i-1)} });
+    }
+    boot().catch(err=>{ nowEl.textContent='Error: '+err.message; msg.className='err'; msg.textContent='Tip: ensure playlist.json exists.'; });
+  </script>
+</body>
+</html>
