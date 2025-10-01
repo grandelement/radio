@@ -39,7 +39,6 @@
           border:1px solid rgba(255,255,255,.12); }
     .btn:hover{background:#222e45}
     .btn.active{ background:var(--accent); color:#03111b; border-color:transparent; }
-    .btn.primary{ background:var(--accent2); color:#fff; }
     audio{ width:100%; margin-top:8px; transform: scale(1.25); transform-origin: center top; }
     a.button{ display:inline-block; padding:10px 18px; margin-top:14px; background:var(--accent2);
               color:#fff; text-decoration:none; border-radius:10px; font-weight:700;
@@ -63,7 +62,8 @@
         <button class="btn active" id="shuffleBtn" title="Shuffle">Shuffle</button>
         <button class="btn" id="orderBtn" title="Album order">Album order</button>
       </div>
-      <audio id="player" controls preload="none"></audio>
+      <!-- preload was 'none' — set to 'auto' to help seamless advance -->
+      <audio id="player" controls preload="auto"></audio>
     </div>
 
     <a class="button" href="https://grandelement.bandcamp.com" target="_blank" rel="noopener">Buy on Bandcamp</a>
@@ -101,12 +101,11 @@
 
     function prettyTitle(p){
       let t = p.split('/').pop().replace(/\.[^.]+$/,'');
-      // turn underscores/dashes/camelCase into spaces
       t = t.replace(/[_-]+/g,' ')
            .replace(/([a-z])([A-Z])/g,'$1 $2')
-           .replace(/\s+/g,' ')
-           .trim();
-      return t;
+           .replace(/([A-Za-z])(\d)/g,'$1 $2')
+           .replace(/(\d)([A-Za-z])/g,'$1 $2');
+      return t.replace(/\s+/g,' ').trim();
     }
     function displayTitle(src){
       const t = titleMap.get(src) || prettyTitle(src);
@@ -120,22 +119,35 @@
       const t = displayTitle(src);
       titlebar.textContent = t.album ? (t.album + ' • ' + t.track) : t.track;
     }
-    function shuffle(arr){
-      const a = arr.slice();
-      for(let k=a.length-1;k>0;k--){const j=(Math.random()*(k+1))|0; [a[k],a[j]]=[a[j],a[k]]}
-      return a;
+    function shuffle(a){
+      const arr = a.slice();
+      for(let k=arr.length-1;k>0;k--){
+        const j = (Math.random()*(k+1))|0;
+        [arr[k],arr[j]]=[arr[j],arr[k]];
+      }
+      return arr;
+    }
+    function setButtons(){
+      if (shuffleOn) {
+        shuffleBtn.classList.add('active'); orderBtn.classList.remove('active');
+      } else {
+        orderBtn.classList.add('active'); shuffleBtn.classList.remove('active');
+      }
     }
     function setOrder(){
       const current = audio.src ? library.find(p => audio.src.includes(p)) : null;
       order = shuffleOn ? shuffle(library) : library.slice();
       if (current){ const keep = order.indexOf(current); i = keep >= 0 ? keep : 0; } else { i = 0; }
-      updateButtons();
+      setButtons();
     }
     function loadTrack(idx){
       if (!order.length) return;
       i = (idx + order.length) % order.length;
       const src = order[i];
+
+      // set src, force load (for Safari/iOS), then play
       audio.src = src + '?v=' + Date.now();
+      audio.load();
       updateTitle(src);
 
       if ('mediaSession' in navigator) {
@@ -151,13 +163,10 @@
 
       audio.play().catch(()=>{}); // autoplay attempt
     }
-    function updateButtons(){
-      if (shuffleOn) {
-        shuffleBtn.classList.add('active'); orderBtn.classList.remove('active');
-      } else {
-        orderBtn.classList.add('active'); shuffleBtn.classList.remove('active');
-      }
-    }
+
+    // ✅ Always keep continuous playback; add tiny delay + error skip
+    audio.addEventListener('ended',  () => setTimeout(()=>loadTrack(i+1), 75));
+    audio.addEventListener('error',  () => setTimeout(()=>loadTrack(i+1), 75));
 
     nextBtn.addEventListener('click', ()=> loadTrack(i+1));
     prevBtn.addEventListener('click', ()=> loadTrack(i-1));
@@ -169,7 +178,6 @@
       if(e.key==='ArrowLeft'){  e.preventDefault(); loadTrack(i-1); }
     });
 
-    // Boot
     (async function boot(){
       const r = await fetch('playlist.json',{cache:'no-store'});
       if(!r.ok) throw new Error('playlist.json not found');
@@ -179,7 +187,7 @@
       titleMap = new Map(items.map(o => [o.src, o.title]));
       setOrder();
       loadTrack(i);
-      // retry autoplay on first interaction (needed for iOS)
+      // help iOS: after any first interaction, allow programmatic play
       window.addEventListener('pointerdown', ()=> audio.play().catch(()=>{}), {once:true});
       window.addEventListener('keydown',     ()=> audio.play().catch(()=>{}), {once:true});
     })().catch(err=>{
