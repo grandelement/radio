@@ -1,0 +1,198 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Grand Element Radio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { --fg:#eaf6ff; --accent:#5ec5ff; --accent2:#ff6a00; --muted:#1b2537; }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{
+      margin:0; min-height:100vh; color:var(--fg);
+      font-family:system-ui, Segoe UI, Roboto, Arial, sans-serif;
+      display:flex; overflow-x:hidden; background:#000;
+    }
+    body::before{
+      content:""; position:fixed; inset:0; z-index:-1;
+      background:#000 center/cover no-repeat fixed;
+      background-image: var(--bg-img, none);
+    }
+    .wrap{ margin:auto; width:min(980px,94vw); padding:28px; text-align:center; }
+    .logo{ width:min(260px,60vw); height:auto; border-radius:50%;
+           filter: drop-shadow(0 0 24px rgba(94,197,255,.55));
+           margin:4px 0 12px; }
+    h1{margin:8px 0 2px; font-weight:700; letter-spacing:.3px}
+    .subtitle{opacity:.9;margin:2px 0 16px}
+    .titlebar{ margin: 8px 0 14px; font-weight:700; font-size:1.05rem; }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:16px; padding:16px 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.45);
+      backdrop-filter: blur(2px);
+    }
+
+    .controls{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:8px 0 8px}
+    .btn{ appearance:none; border:0; padding:10px 14px; border-radius:10px;
+          background:var(--muted); color:#eaf6ff; cursor:pointer; font-weight:600;
+          border:1px solid rgba(255,255,255,.12); }
+    .btn:hover{background:#222e45}
+    .btn.active{ background:var(--accent); color:#03111b; border-color:transparent; }
+    audio{ width:100%; margin-top:8px; transform: scale(1.25); transform-origin: center top; }
+    a.button{ display:inline-block; padding:10px 18px; margin-top:14px; background:var(--accent2);
+              color:#fff; text-decoration:none; border-radius:10px; font-weight:700;
+              box-shadow: 0 6px 16px rgba(255,106,0,.25); }
+    a.button:hover{ filter:brightness(1.05) }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <img class="logo" src="img/logo.png" alt="Grand Element" />
+
+    <h1>Grand Element Radio</h1>
+    <p class="subtitle">Music created to help set your soul free. Enjoy!!</p>
+
+    <div class="titlebar" id="titlebar"></div>
+
+    <div class="panel">
+      <div class="controls">
+        <button class="btn" id="prevBtn" title="Previous (Left Arrow)">Prev</button>
+        <button class="btn" id="nextBtn" title="Next (Right Arrow)">Next</button>
+        <button class="btn active" id="shuffleBtn" title="Shuffle">Shuffle</button>
+        <button class="btn" id="orderBtn" title="Album order">Album order</button>
+      </div>
+      <!-- preload was 'none' — set to 'auto' to help seamless advance -->
+      <audio id="player" controls preload="auto"></audio>
+    </div>
+
+    <a class="button" href="https://grandelement.bandcamp.com" target="_blank" rel="noopener">Buy on Bandcamp</a>
+  </div>
+
+  <script>
+    // --- Background ---
+    fetch('backgrounds.json', {cache:'no-store'})
+      .then(r => r.ok ? r.json() : [])
+      .then(list => {
+        if (!Array.isArray(list) || !list.length) return;
+        const last = sessionStorage.getItem('lastBg');
+        let pick = list[Math.floor(Math.random() * list.length)];
+        if (list.length > 1 && pick === last) {
+          const i = list.indexOf(pick);
+          pick = list[(i + 1) % list.length];
+        }
+        const url = pick + '?v=' + Date.now();
+        const img = new Image();
+        img.onload  = () => { document.body.style.setProperty('--bg-img', 'url("' + url + '")'); sessionStorage.setItem('lastBg', pick); };
+        img.onerror = () => { document.body.style.setProperty('--bg-img', 'url("' + pick + '")'); };
+        img.src = pick;
+      })
+      .catch(()=>{});
+
+    // --- Player ---
+    const audio = document.getElementById('player');
+    const titlebar = document.getElementById('titlebar');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+    const orderBtn   = document.getElementById('orderBtn');
+    const nextBtn    = document.getElementById('nextBtn');
+    const prevBtn    = document.getElementById('prevBtn');
+
+    let items=[], library=[], titleMap=new Map(), order=[], i=0, shuffleOn=true;
+
+    function prettyTitle(p){
+      let t = p.split('/').pop().replace(/\.[^.]+$/,'');
+      t = t.replace(/[_-]+/g,' ')
+           .replace(/([a-z])([A-Z])/g,'$1 $2')
+           .replace(/([A-Za-z])(\d)/g,'$1 $2')
+           .replace(/(\d)([A-Za-z])/g,'$1 $2');
+      return t.replace(/\s+/g,' ').trim();
+    }
+    function displayTitle(src){
+      const t = titleMap.get(src) || prettyTitle(src);
+      const parts = t.split(' - ');
+      if (parts.length >= 2) {
+        return { album: parts[0].trim(), track: parts.slice(1).join(' - ').trim() };
+      }
+      return { album: '', track: t };
+    }
+    function updateTitle(src){
+      const t = displayTitle(src);
+      titlebar.textContent = t.album ? (t.album + ' • ' + t.track) : t.track;
+    }
+    function shuffle(a){
+      const arr = a.slice();
+      for(let k=arr.length-1;k>0;k--){
+        const j = (Math.random()*(k+1))|0;
+        [arr[k],arr[j]]=[arr[j],arr[k]];
+      }
+      return arr;
+    }
+    function setButtons(){
+      if (shuffleOn) {
+        shuffleBtn.classList.add('active'); orderBtn.classList.remove('active');
+      } else {
+        orderBtn.classList.add('active'); shuffleBtn.classList.remove('active');
+      }
+    }
+    function setOrder(){
+      const current = audio.src ? library.find(p => audio.src.includes(p)) : null;
+      order = shuffleOn ? shuffle(library) : library.slice();
+      if (current){ const keep = order.indexOf(current); i = keep >= 0 ? keep : 0; } else { i = 0; }
+      setButtons();
+    }
+    function loadTrack(idx){
+      if (!order.length) return;
+      i = (idx + order.length) % order.length;
+      const src = order[i];
+
+      // set src, force load (for Safari/iOS), then play
+      audio.src = src + '?v=' + Date.now();
+      audio.load();
+      updateTitle(src);
+
+      if ('mediaSession' in navigator) {
+        const t = displayTitle(src);
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: t.track || 'Grand Element',
+          artist: 'Grand Element',
+          album: t.album || 'Grand Element Radio'
+        });
+        try{navigator.mediaSession.setActionHandler('previoustrack',()=>loadTrack(i-1))}catch(e){}
+        try{navigator.mediaSession.setActionHandler('nexttrack',()=>loadTrack(i+1))}catch(e){}
+      }
+
+      audio.play().catch(()=>{}); // autoplay attempt
+    }
+
+    // ✅ Always keep continuous playback; add tiny delay + error skip
+    audio.addEventListener('ended',  () => setTimeout(()=>loadTrack(i+1), 75));
+    audio.addEventListener('error',  () => setTimeout(()=>loadTrack(i+1), 75));
+
+    nextBtn.addEventListener('click', ()=> loadTrack(i+1));
+    prevBtn.addEventListener('click', ()=> loadTrack(i-1));
+    shuffleBtn.addEventListener('click', ()=>{ shuffleOn=true;  setOrder(); });
+    orderBtn.addEventListener('click',   ()=>{ shuffleOn=false; setOrder(); });
+
+    window.addEventListener('keydown', e => {
+      if(e.key==='ArrowRight'){ e.preventDefault(); loadTrack(i+1); }
+      if(e.key==='ArrowLeft'){  e.preventDefault(); loadTrack(i-1); }
+    });
+
+    (async function boot(){
+      const r = await fetch('playlist.json',{cache:'no-store'});
+      if(!r.ok) throw new Error('playlist.json not found');
+      const raw = await r.json();
+      items    = raw.map(x => typeof x==='string' ? ({src:x, title:null}) : x);
+      library  = items.map(o => o.src);
+      titleMap = new Map(items.map(o => [o.src, o.title]));
+      setOrder();
+      loadTrack(i);
+      // help iOS: after any first interaction, allow programmatic play
+      window.addEventListener('pointerdown', ()=> audio.play().catch(()=>{}), {once:true});
+      window.addEventListener('keydown',     ()=> audio.play().catch(()=>{}), {once:true});
+    })().catch(err=>{
+      titlebar.textContent = 'Error: '+err.message;
+    });
+  </script>
+</body>
+</html>
