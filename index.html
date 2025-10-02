@@ -62,7 +62,8 @@
       </div>
       <p class="tiny" id="offlineHint"></p>
     </div>
-
+     <p class="subtitle">Want to support Grand Element project? The music is available to purchase below.</p>
+     <p class="subtitle">Much Love!!</p>
     <a class="button" href="https://grandelement.bandcamp.com" target="_blank" rel="noopener">Buy on Bandcamp</a>
   </div>
 
@@ -223,6 +224,6 @@
       setOfflineUI(enabled);
       if(enabled){ const sw=await swReg(); const list=[...library,...idList,...clipList]; sw?.postMessage({type:'CACHE_LIST',payload:{list}}); }
     })().catch(err=>{ titlebar.textContent='Error loading site'; console.error(err); });
-  </script>
+  <script src="app.js" defer></script>
 </body>
 </html>
