@@ -1,8 +1,8 @@
 // service-worker.js
-const VERSION='ge-radio-master-v1';
+const VERSION='ge-radio-v6';           // bump to force update
 const CORE=`${VERSION}-core`;
 const SONGS=`${VERSION}-songs`;
-const CORE_ASSETS=['./','./index.html','./img/logo.png'];
+const CORE_ASSETS=['./','./index.html','./manifest.json','./img/logo.png'];
 
 // normalize: strip ?v=… so cached media is found
 function normalize(req){
@@ -23,7 +23,7 @@ self.addEventListener('activate',e=>{
 });
 self.addEventListener('fetch',e=>{
   const u=new URL(e.request.url);
-  const isCore = u.origin===location.origin && (u.pathname.endsWith('/') || /\/(index\.html|img\/logo\.png)$/.test(u.pathname));
+  const isCore = u.origin===location.origin && (u.pathname.endsWith('/') || /\/(index\.html|manifest\.json|img\/logo\.png)$/.test(u.pathname));
   if(isCore){
     e.respondWith(
       caches.match(e.request,{ignoreSearch:true}).then(r=>r||fetch(e.request).then(res=>{
