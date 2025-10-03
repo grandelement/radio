@@ -10,9 +10,9 @@
     *{box-sizing:border-box}
     html,body{height:100%; margin:0; background:#000; color:var(--fg); font-family:system-ui, Segoe UI, Roboto, Arial, sans-serif;}
 
-    /* iOS-safe fixed background */
+    /* iOS-safe fixed background (layered under UI so no black gap) */
     body::before{
-      content:""; position:fixed; left:0; top:0; width:100%; height:100svh; z-index:-1;
+      content:""; position:fixed; left:0; top:0; width:100%; height:100svh; z-index:0;
       background-color:#000;
       background-image: var(--bg-img, none);
       background-position:center center;
@@ -23,7 +23,7 @@
       transform:translateZ(0);
     }
 
-    .wrap.ui{ margin:auto; width:min(980px,94vw); padding:28px; text-align:center; transition: opacity .4s ease; }
+    .wrap.ui{ position:relative; z-index:1; margin:auto; width:min(980px,94vw); padding:28px; text-align:center; transition: opacity .4s ease; }
     .ui.hidden{ opacity:0; pointer-events:none; }
 
     .logo{ width:min(260px,60vw); height:auto; border-radius:50%; filter: drop-shadow(0 0 24px rgba(94,197,255,.55)); margin:4px 0 12px; }
@@ -94,20 +94,21 @@
   </div>
 
 <script>
-/* ========== CONFIG + HELPERS ========== */
+/* ===== CONFIG + HELPERS ===== */
 const autoOwner = location.hostname.split('.')[0] || 'grandelement';
 const autoRepo  = (location.pathname.split('/').filter(Boolean)[0]) || 'radio';
 const CONFIG = { owner:autoOwner, repo:autoRepo, branch:'main', folders:{ music:'music', id:'id', clips:'clips', img:'img' } };
 
 const LATE_ALBUMS = new Set(['Entergy','Love','Soul','Spirit','Fire']);
-const EARLY_ALBUMS= new Set(['Trio','Live','SessionI','SessionII','FundamentalGroove']);
 const RELEASE_ORDER = ['FundamentalGroove','Trio','Live','SessionI','SessionII','Entergy','Love','Soul','Spirit','Fire'];
 function normalizeAlbum(a){ return (a||'').replace(/\s+/g,'').toLowerCase(); }
 function normalizeKey(s){ return (s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim(); }
 
-function tidyTitleLike(s){
-  if(!s) return {num:null,title:''};
-  let t = s.replace(/\.[^.]+$/,'').trim();
+function tidyTitleLike(name){
+  if(!name) return {num:null,title:''};
+  // decode %xx, normalize equals to " = "
+  let file = decodeURIComponent(name);
+  let t = file.replace(/\.[^.]+$/,'').replace(/=/g,' = ').trim();
   let num=null; let m=t.match(/^\s*(\d{1,3})\s*(?:[.\-–_]|(?:\s*-\s*))\s*(.+)$/);
   if(m){ num=m[1]; t=m[2]; } else { const m2=t.match(/^\s*(\d{1,3})\s+(.+)$/); if(m2){num=m2[1]; t=m2[2];} }
   t = t.replace(/[_]+/g,' ').replace(/\s{2,}/g,' ').replace(/([a-z])([A-Z])/g,'$1 $2')
@@ -131,7 +132,7 @@ function showTitle(src, albumMode){
               : ((album?album+mid:'') + title);
 }
 
-/* ========== GITHUB CONTENTS API ========== */
+/* ===== GITHUB API ===== */
 const GH_BASE = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents`;
 async function listDir(path){
   const url = `${GH_BASE}/${encodeURIComponent(path)}?ref=${encodeURIComponent(CONFIG.branch)}`;
@@ -153,7 +154,7 @@ async function collectFiles(folder, exts){
   return out;
 }
 
-/* ========== BACKGROUND (iOS-stable) ========== */
+/* ===== BACKGROUND ===== */
 (async function pickBackground(){
   try{
     const imgs = await collectFiles(CONFIG.folders.img, new Set(['gif','png','jpg','jpeg','webp']));
@@ -171,19 +172,20 @@ async function collectFiles(folder, exts){
   }catch(e){}
 })();
 
-/* ========== LIBRARY + ORDER (no restart on toggle) ========== */
+/* ===== LIBRARY / PROGRAM (no audio break on toggle) ===== */
 let items=[], baseList=[], programList=[], iIdx=0, shuffleOn=true;
 let ids=[], clips=[], lastClipKey=null;
 
-function weightAlbum(album){ return LATE_ALBUMS.has(album)?2:1; }
+function weightAlbum(a){ return LATE_ALBUMS.has(a)?2:1; }
 function shuffleWeighted(arr){
-  const bag=[]; const seen=new Set(); const out=[];
+  const bag=[], seen=new Set(), out=[];
   for(const src of arr){ const w=weightAlbum(parseAlbumTrack(src).album); for(let k=0;k<w;k++) bag.push(src); }
   for(let k=bag.length-1;k>0;k--){ const j=(Math.random()*(k+1))|0; [bag[k],bag[j]]=[bag[j],bag[k]]; }
   for(const s of bag){ if(!seen.has(s)){ seen.add(s); out.push(s); } }
   return out;
 }
 function makeAlbumOrdered(arr){
+  const RELEASE_ORDER_N = RELEASE_ORDER.map(normalizeAlbum);
   const groups=new Map();
   for(const src of arr){
     const {album,trackNo,title}=parseAlbumTrack(src);
@@ -191,8 +193,7 @@ function makeAlbumOrdered(arr){
     if(!groups.has(key)) groups.set(key,{name:album, rows:[]});
     groups.get(key).rows.push({src,trackNo,title});
   }
-  const roNorm=RELEASE_ORDER.map(normalizeAlbum);
-  const orderAlbums = roNorm.filter(k=>groups.has(k)).concat([...groups.keys()].filter(k=>!roNorm.includes(k)));
+  const orderAlbums = RELEASE_ORDER_N.filter(k=>groups.has(k)).concat([...groups.keys()].filter(k=>!RELEASE_ORDER_N.includes(k)));
   const out=[];
   for(const key of orderAlbums){
     const g=groups.get(key);
@@ -201,9 +202,7 @@ function makeAlbumOrdered(arr){
   }
   return out;
 }
-
 function buildProgram(libs){
-  // Insert IDs/clips every 4–8 tracks, try to pair similar clip before a song sometimes
   const program=[]; const clipKeys=clips.map(c=>({url:c, key:normalizeKey(c.split('/').pop())}));
   let nextBreak = 4 + (Math.random()*5|0); let songCount=0; let pairToggle=false;
   for(const src of libs){
@@ -229,44 +228,28 @@ function buildProgram(libs){
   }
   return program;
 }
-
-/* Build baseList from items without touching current playback */
 function rebuildBaseList(keepCurrent=true){
   const audio=document.getElementById('player');
-  const currentUrl = audio.currentSrc || audio.src || '';
-  // normalize by removing ?v=…
-  const curNorm = currentUrl.split('?')[0];
-
+  const cur = (audio.currentSrc||audio.src||'').split('?')[0];
   let newBase = shuffleOn ? shuffleWeighted(items) : makeAlbumOrdered(items);
-
-  // Set index to the same current track if present
-  if(keepCurrent && curNorm){
-    const pos = newBase.findIndex(u=> curNorm === u.split('?')[0]);
-    if(pos>=0) iIdx = pos; else iIdx = 0;
-  } else {
-    iIdx = 0;
-  }
+  if(keepCurrent && cur){
+    const pos = newBase.findIndex(u=> cur === u.split('?')[0]);
+    iIdx = (pos>=0? pos : 0);
+  } else iIdx=0;
   baseList = newBase;
 }
-
-/* Rebuild programList around baseList but DO NOT reload current audio */
 function rebuildProgram(keepCurrent=true){
   const audio=document.getElementById('player');
-  const currentUrl = audio.currentSrc || audio.src || '';
-  const curNorm = currentUrl.split('?')[0];
-
+  const cur = (audio.currentSrc||audio.src||'').split('?')[0];
   const newProg = buildProgram(baseList);
-
-  if(keepCurrent && curNorm){
-    const pos = newProg.findIndex(u=> curNorm === u.split('?')[0]);
-    if(pos>=0) iIdx = pos; else iIdx = 0;
-  } else {
-    iIdx = 0;
-  }
+  if(keepCurrent && cur){
+    const pos = newProg.findIndex(u=> cur === u.split('?')[0]);
+    iIdx = (pos>=0? pos : 0);
+  } else iIdx=0;
   programList = newProg;
 }
 
-/* ========== PLAYER ========== */
+/* ===== PLAYER ===== */
 const audio=document.getElementById('player');
 const nextBtn=document.getElementById('nextBtn');
 const prevBtn=document.getElementById('prevBtn');
@@ -297,29 +280,27 @@ function loadTrack(idx){
 nextBtn.onclick=()=>loadTrack(iIdx+1);
 prevBtn.onclick=()=>loadTrack(iIdx-1);
 
-/* Preserve track & timestamp on toggle */
 function setButtons(){ if(shuffleOn){shuffleBtn.classList.add('active'); orderBtn.classList.remove('active');}
                        else{orderBtn.classList.add('active'); shuffleBtn.classList.remove('active');} }
 
+/* NO-AUDIO-BREAK toggles */
 shuffleBtn.onclick = ()=>{
   if (!shuffleOn){
-    const wasTime=audio.currentTime||0, wasPaused=audio.paused;
+    const wasPaused=audio.paused;
     shuffleOn=true; setButtons();
     rebuildBaseList(true); rebuildProgram(true);
-    // keep playing same file, same time; only title style may change
+    // keep same file; don't touch currentTime or call play() if already playing
     const cur=programList[iIdx]; if(cur) showTitle(cur, false);
-    if(!wasPaused) try{audio.play()}catch(e){}
-    audio.currentTime=wasTime;
+    if(!wasPaused) {/* leave audio alone */} else { audio.play().catch(()=>{}); }
   }
 };
 orderBtn.onclick = ()=>{
   if (shuffleOn){
-    const wasTime=audio.currentTime||0, wasPaused=audio.paused;
+    const wasPaused=audio.paused;
     shuffleOn=false; setButtons();
     rebuildBaseList(true); rebuildProgram(true);
     const cur=programList[iIdx]; if(cur) showTitle(cur, true);
-    if(!wasPaused) try{audio.play()}catch(e){}
-    audio.currentTime=wasTime;
+    if(!wasPaused) {/* leave audio alone */} else { audio.play().catch(()=>{}); }
   }
 };
 
@@ -328,7 +309,7 @@ audio.addEventListener('error',()=>loadTrack(iIdx+1));
 window.addEventListener('pointerdown', ()=>audio.play().catch(()=>{}), {once:true});
 window.addEventListener('keydown', ()=>audio.play().catch(()=>{}), {once:true});
 
-/* ========== OFFLINE (same as before) ========== */
+/* ===== OFFLINE (unchanged UI logic) ===== */
 const offlineToggle=document.getElementById('offlineToggle');
 const pfill=document.getElementById('pfill');
 const progressEl=document.getElementById('progress');
@@ -356,7 +337,7 @@ offlineToggle.onclick=async ()=>{
     }
   } else {
     setOfflineUI(true,false);
-    const list = programList.slice(); // cache what actually plays
+    const list = programList.slice();
     progressEl.textContent=`Offline caching: 0 / ${list.length} (0%)`;
     if(pfill) pfill.style.width='0%';
     (await swReg())?.postMessage({type:'CACHE_LIST',payload:{list}});
@@ -377,23 +358,16 @@ if('serviceWorker' in navigator){
   });
 }
 
-/* ========== SCREENSAVER (8s) — iPhone-friendly ========== */
+/* ===== SCREENSAVER: 10s idle ===== */
 const UI = document.getElementById('ui');
 let idleTimer=null;
 function showUI(){ UI.classList.remove('hidden'); }
 function hideUI(){ UI.classList.add('hidden'); }
-function poke(){
-  showUI();
-  clearTimeout(idleTimer);
-  idleTimer = setTimeout(hideUI, 8000);
-}
-// Only tap/key events reset on iPhone (avoid continuous move/scroll resets)
-['pointerdown','keydown','touchstart'].forEach(ev=>{
-  window.addEventListener(ev, poke, {passive:true});
-});
+function poke(){ showUI(); clearTimeout(idleTimer); idleTimer=setTimeout(hideUI, 10000); }
+['pointerdown','keydown','touchstart'].forEach(ev=> window.addEventListener(ev, poke, {passive:true}));
 poke();
 
-/* ========== BOOT: scan GitHub, build lists ========== */
+/* ===== BOOT ===== */
 (async function boot(){
   const music = await collectFiles(CONFIG.folders.music, new Set(['mp3','wav','m4a']));
   const idfs  = await collectFiles(CONFIG.folders.id,    new Set(['mp3','wav','m4a']));
