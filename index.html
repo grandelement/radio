@@ -1,278 +1,353 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Grand Element Radio</title>
 <style>
-  :root{--fg:#eaf6ff;--accent:#5ec5ff;--accent2:#ff6a00}
-  *{box-sizing:border-box} html,body{height:100%}
+  :root{
+    --glass: rgba(255,255,255,.08);
+    --glass-strong: rgba(255,255,255,.12);
+    --fg:#e7ecff; --muted:#9db0d7; --accent:#4aa3ff; --bg:#0b0f18;
+    --btn-h:42px; --radius:14px;
+  }
+  html,body{height:100%}
   body{
-    margin:0; min-height:100vh; color:var(--fg);
-    font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;
-    background:#000; overflow-x:hidden;
-  }
-  /* fixed wallpaper */
-  body::before{
-    content:""; position:fixed; inset:0; z-index:-2;
-    background:#000 center/cover no-repeat;
-    background-image:var(--bg-img, none);
-    transform:translateZ(0); will-change:transform; pointer-events:none;
+    margin:0; font-family: ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;
+    color:var(--fg); background:#000; overflow-x:hidden;
   }
 
-  .wrap{margin:auto; width:min(980px,94vw); padding:28px; text-align:center}
-  .logo{width:min(260px,60vw); height:auto; border-radius:50%;
-        filter:drop-shadow(0 0 24px rgba(94,197,255,.55)); margin:6px 0 12px}
-  h1{margin:8px 0 4px; font-weight:800; letter-spacing:.3px}
-  p.help{opacity:.92; margin:2px 0 8px}
-
-  .panel,.offline{
-    background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
-    border:1px solid rgba(255,255,255,.10); border-radius:16px; padding:16px 14px;
-    box-shadow:0 10px 30px rgba(0,0,0,.45); backdrop-filter:blur(2px);
-    transition:opacity .35s ease;
+  /* Background layer */
+  #bg, #bg-fade{
+    position:fixed; inset:0; object-fit:cover; width:100%; height:100%;
+    filter:brightness(.9) saturate(1.05);
   }
-  .controls{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:8px 0 12px}
-  .btn{
-    appearance:none; border:1px solid rgba(255,255,255,.12); padding:10px 14px; border-radius:12px;
-    background:#141d2b; color:#eaf6ff; cursor:pointer; font-weight:800;
+  #bg-fade{ opacity:0; transition:opacity .7s ease; }
+  .fade-on { opacity:1 !important; }
+
+  /* Top logo */
+  .logo { width:160px; height:160px; margin:28px auto 8px; display:block; border-radius:50%; box-shadow:0 10px 40px rgba(0,0,0,.45)}
+  main{ position:relative; z-index:2; max-width:840px; margin:0 auto; padding:0 16px 60px; text-align:center;}
+
+  h1{font-size:40px; margin:.2rem 0 .2rem; letter-spacing:.6px}
+  p.sub{margin:0 0 .9rem; color:var(--muted)}
+  .support-note{margin:18px 0 4px; color:var(--muted)}
+
+  /* Glass card for controls */
+  .card{
+    margin:18px auto 16px; padding:18px 16px; max-width:760px;
+    background:var(--glass); backdrop-filter: blur(9px);
+    border-radius:20px; border:1px solid rgba(255,255,255,.06);
   }
-  .btn:hover{background:#1b2537}
-  .btn.on{background:var(--accent); color:#03111b; border-color:transparent}
+  /* Remove the “extra box” during fade-out: card becomes transparent & clicks-through */
+  .card.is-hidden{ background:transparent; border-color:transparent; pointer-events:none }
 
-  audio{width:100%; margin-top:6px; transform:scale(1.12); transform-origin:center top}
-  .subtle{opacity:.85; font-size:.95rem; margin-top:8px}
-  .err{color:#ff8a8a}
+  /* Buttons */
+  .row{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
+  button{
+    height:var(--btn-h); padding:0 16px; border-radius:var(--radius);
+    border:1px solid rgba(255,255,255,.08);
+    background:var(--glass-strong); color:var(--fg);
+    font-weight:600; letter-spacing:.2px; cursor:pointer;
+    transition:transform .04s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  button:hover{ box-shadow:0 6px 22px rgba(0,0,0,.32) inset }
+  .on{ background:var(--accent); color:#001a33; border-color:transparent }
+  .pill{ border-radius:999px }
+  .tiny{ height:34px; padding:0 12px; font-size:.92rem }
 
-  .offline{margin-top:18px}
-  .bar{height:8px; background:#0e1624; border-radius:12px; overflow:hidden; margin:8px auto 0; width:min(540px,92%)}
-  .bar>span{display:block; height:100%; width:0%; background:var(--accent); transition:width .2s}
+  /* Track + progress */
+  #now{ font-size:1.05rem; margin:8px auto 12px; color:#fff; min-height:1.2em; }
+  progress{ width:100%; height:8px; border-radius:999px; overflow:hidden }
+  progress::-webkit-progress-bar{ background:rgba(255,255,255,.12) }
+  progress::-webkit-progress-value{ background:var(--accent) }
 
-  a.buy{display:inline-block; padding:10px 18px; margin-top:16px; background:var(--accent2); color:#fff;
-        text-decoration:none; border-radius:10px; font-weight:800; box-shadow:0 6px 16px rgba(255,106,0,.25)}
-  a.buy:hover{filter:brightness(1.05)}
+  /* Offline card */
+  .muted{ color:var(--muted) }
+  .meter{ height:8px; border-radius:999px; background:rgba(255,255,255,.12); overflow:hidden }
+  .meter > span{ display:block; height:100%; background:var(--accent); width:0% }
 
-  /* screensaver fade (10s idle) */
-  .chrome{transition:opacity .35s ease}
-  .fade .chrome{opacity:0}
-  /* NEW: fully hide glass panels so no faint box remains */
-  .fade .panel, .fade .offline{
-    opacity:0 !important; background:transparent !important;
-    border-color:transparent !important; box-shadow:none !important;
+  /* Bandcamp button */
+  .bandcamp{
+    display:inline-block; margin-top:8px; padding:12px 18px; border-radius:12px;
+    background:#ff9f45; color:#2b1700; font-weight:800; text-decoration:none;
+    box-shadow:0 8px 30px rgba(0,0,0,.35)
+  }
+
+  /* Small screens */
+  @media (max-width:560px){
+    .logo{ width:132px; height:132px }
+    h1{ font-size:32px }
   }
 </style>
 </head>
 <body>
-  <div class="wrap chrome">
-    <img src="img/logo.png" alt="Grand Element" class="logo" />
-    <h1 class="chrome">Grand Element Radio</h1>
-    <p class="help chrome">Music created to help set your soul free. Enjoy!!</p>
-    <p class="help chrome">Refresh the page for a new experience.</p>
+<img id="bg" alt="" />
+<img id="bg-fade" alt="" />
 
-    <div class="panel chrome">
-      <div id="title" style="font-weight:800; margin:6px 0 10px">Loading…</div>
-      <div class="controls">
-        <button class="btn" id="prevBtn">Prev</button>
-        <button class="btn" id="nextBtn">Next</button>
-        <button class="btn on" id="shuffleBtn">Shuffle</button>
-        <button class="btn" id="albumBtn">Album order</button>
-      </div>
-      <audio id="player" controls preload="none" playsinline></audio>
-      <div id="msg" class="subtle"></div>
+<main>
+  <img class="logo" src="../img/ge-blue.jpg" alt="Grand Element" onerror="this.style.display='none'">
+  <h1>Grand Element Radio</h1>
+  <p class="sub">Music created to help set your soul free. Enjoy!!<br/>Refresh the page for a new experience.</p>
+
+  <div id="playerCard" class="card">
+    <div class="row" style="margin-bottom:10px">
+      <button id="prevBtn" class="pill tiny">Prev</button>
+      <button id="nextBtn" class="pill tiny">Next</button>
+      <button id="shuffleBtn" class="pill on">Shuffle</button>
+      <button id="albumBtn" class="pill">Album order</button>
     </div>
 
-    <div class="offline chrome">
-      <div style="font-weight:800; margin-bottom:8px">Offline Mode</div>
-      <button class="btn" id="offlineBtn">Turn Offline ON</button>
-      <div class="subtle" id="progressText">Offline caching: 0 / 0 (0%)</div>
-      <div class="bar"><span id="progressBar"></span></div>
-      <div class="subtle" style="margin-top:8px">Tap to save music for offline use…</div>
+    <div id="now"></div>
+    <audio id="audio" preload="auto" crossorigin="anonymous"></audio>
+    <progress id="bar" max="1" value="0"></progress>
+    <div class="row" style="gap:6px; margin-top:8px">
+      <button id="playBtn" class="pill tiny">▶︎</button>
+      <span id="time" class="muted tiny" style="line-height:34px"></span>
+      <input id="vol" type="range" min="0" max="1" step="0.01" value="1" style="width:180px" />
     </div>
 
-    <p class="help chrome" style="margin-top:14px">
-      If you’d like to support the project, you can purchase the music below.
-    </p>
-    <a class="buy chrome" href="https://grandelement.bandcamp.com" target="_blank" rel="noopener">Buy on Bandcamp</a>
+    <div id="err" class="muted" style="margin-top:10px; min-height:1.2em"></div>
   </div>
 
+  <!-- Offline -->
+  <div class="card" id="offlineCard">
+    <h3 style="margin:0 0 6px">Offline Mode</h3>
+    <div class="row" style="margin-bottom:8px">
+      <button id="offlineBtn" class="pill tiny">Turn Offline ON</button>
+    </div>
+    <div class="muted" style="margin:6px 0 8px">Offline caching: <span id="cacheCount">0 / 0 (0%)</span></div>
+    <div class="meter"><span id="cacheMeter"></span></div>
+    <div class="muted" style="margin-top:8px">Tap to save music for offline use…</div>
+  </div>
+
+  <p class="support-note">If you’d like to support the project, you can purchase the music below.</p>
+  <a class="bandcamp" href="https://grandelement.bandcamp.com" target="_blank" rel="noopener">Buy on Bandcamp</a>
+</main>
+
 <script>
-/* ---------------- Backgrounds (random per refresh) ---------------- */
-fetch('backgrounds.json',{cache:'no-store'})
-  .then(r=>r.ok?r.json():[]).then(list=>{
-    if(Array.isArray(list)&&list.length){
-      const pick=list[Math.floor(Math.random()*list.length)];
-      document.body.style.setProperty('--bg-img','url("'+pick+'")');
-    }
-  }).catch(()=>{});
+/* ========= CONFIG (keep these if you move folders) ========= */
+const GITHUB_OWNER = 'grandelement';
+const GITHUB_REPO  = 'grandelement.github.io';
+const BASE_DIR     = 'radio';
+const MUSIC_DIR    = `${BASE_DIR}/music`;
+const IMG_DIR      = `${BASE_DIR}/img`;
 
-/* ---------------- Elements ---------------- */
-const audio = document.getElementById('player');
-const titleEl = document.getElementById('title');
-const msgEl   = document.getElementById('msg');
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
-const shufBtn = document.getElementById('shuffleBtn');
-const albBtn  = document.getElementById('albumBtn');
+/* Permanent album release order (folder names must match exactly) */
+const ALBUMS_IN_ORDER = [
+  'Grand Element - 2005 - Fundamental Groove',
+  'Grand Element - 2006 - Trio',
+  'Grand Element - 2007 - Live',
+  'Grand Element - 2008 - Sessions I',
+  'Grand Element - 2009 - Sessions II',
+  'Grand Element - 2010 - Intergy',
+  'Grand Element - 2011 - Love',
+  'Grand Element - 2017 - Soul',
+  'Grand Element - 2021 - Spirit',
+  'Grand Element - 2024 - Fire',
+  'Grand Element - Singles'
+];
 
-/* ---------------- Library & ordering ---------------- */
-let LIB=[], ORDER=[], IDX=0, shuffleOn=true;
+/* ========= Helpers ========= */
+const $ = sel => document.querySelector(sel);
+const fmtTime = s => {
+  if (!isFinite(s) || s<0) return '0:00';
+  const m = Math.floor(s/60), ss = Math.floor(s%60).toString().padStart(2,'0');
+  return `${m}:${ss}`;
+};
 
-/* Title parsing based on folder layout: music/<AlbumFolder>/<TrackFile>.mp3 */
-function fmtTitle(path){
-  const parts = path.split('/');
-  const albumFull = parts.length>=3 ? parts[parts.length-2] : '';
-  const album = albumFull.replace(/^Grand Element - \d{4} - /,'').trim();
-  const base = parts[parts.length-1].replace(/\.[^.]+$/,'');
-  // optional NN_ prefix (02_Title) or Album_02_Title
-  const m = base.match(/(?:^|[_\-. ])(\d{2})[_\-. ]+(.+)$/);
-  const trackNum = m ? m[1] : null;
-  const song = (m ? m[2] : base)
-                .replace(/[_\-]+/g,' ')
-                .replace(/ +/g,' ')
-                .replace(/\s*=\s*/g,' = ')
-                .trim();
-  return {album, song, trackNum};
-}
-function setShuffleTitle(p){ const {album,song}=fmtTitle(p); titleEl.textContent=`${album} • ${song}`; }
-function setAlbumTitle(p){ const {album,song,trackNum}=fmtTitle(p); titleEl.textContent=`${album} • ${trackNum?trackNum+' • ':''}${song}`; }
-
-/* Build order but keep current song/time; no src swap unless needed */
-function buildOrder(keepSrc){
-  const cur = keepSrc || audio.currentSrc || '';
-  if(shuffleOn){
-    ORDER = LIB.slice();
-    for(let i=ORDER.length-1;i>0;i--){const j=(Math.random()*(i+1))|0; [ORDER[i],ORDER[j]]=[ORDER[j],ORDER[i]];}
-  }else{
-    ORDER = LIB.slice(); // album sequence is whatever your TXT lists
-  }
-  const keep = ORDER.findIndex(p=>cur.includes(p));
-  IDX = keep>=0 ? keep : 0;
+/* Backgrounds: cycle through whatever is in /img using GitHub API */
+async function listDir(path){
+  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${encodeURIComponent(path)}`;
+  const res = await fetch(url, {headers:{'Accept':'application/vnd.github+json'}});
+  if(!res.ok) throw new Error(`GitHub list failed: ${path}`);
+  return res.json();
 }
 
-/* Load at index without interrupt if it's already that src */
-function loadAt(i, keepTime=true){
-  if(!ORDER.length) return;
-  IDX = (i+ORDER.length)%ORDER.length;
-  const src = ORDER[IDX];
-  const was = audio.src;
-  const label = shuffleOn ? setShuffleTitle : setAlbumTitle;
-
-  if(!was || !was.includes(src)){
-    const t = keepTime ? audio.currentTime : 0;
-    audio.src = src + '?v=' + Date.now();
-    label(src);
-    audio.addEventListener('loadedmetadata', function once(){
-      audio.removeEventListener('loadedmetadata', once);
-      if(keepTime && t>0 && t<audio.duration) audio.currentTime = t;
-      nudgeAutoplay(); // keep rolling
-    });
-  }else{
-    label(src); // just update label
-  }
-}
-
-/* Discover library from RADIO_TRACK_ORDER.txt (one path per line) */
-async function getLibrary(){
-  const r = await fetch('RADIO_TRACK_ORDER.txt',{cache:'no-store'});
-  if(!r.ok) throw new Error('RADIO_TRACK_ORDER.txt not found');
-  const txt = await r.text();
-  const lines = txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-  return lines;
-}
-
-/* ---------------- Boot ---------------- */
-async function boot(){
+async function loadBackgrounds(){
   try{
-    LIB = await getLibrary();
-    buildOrder();
-    loadAt(IDX,false);
-
-    audio.addEventListener('ended', ()=>loadAt(IDX+1,false));
-    nextBtn.addEventListener('click', ()=>loadAt(IDX+1,true));
-    prevBtn.addEventListener('click', ()=>loadAt(IDX-1,true));
-
-    shufBtn.addEventListener('click', ()=>{
-      if(!shuffleOn){ shuffleOn=true; shufBtn.classList.add('on'); albBtn.classList.remove('on');
-        const cur=ORDER[IDX]; buildOrder(cur); loadAt(IDX,true);
-      }
-    });
-    albBtn.addEventListener('click', ()=>{
-      if(shuffleOn){ shuffleOn=false; albBtn.classList.add('on'); shufBtn.classList.remove('on');
-        const cur=ORDER[IDX]; buildOrder(cur); loadAt(IDX,true);
-      }
-    });
-
-    // Media Session integration
-    if('mediaSession' in navigator){
-      const setMeta = (src)=>{const {album,song}=fmtTitle(src);navigator.mediaSession.metadata=new MediaMetadata({title:song,artist:'Grand Element',album});};
-      audio.addEventListener('playing',()=>{if(ORDER[IDX]) setMeta(ORDER[IDX]);});
-      try{navigator.mediaSession.setActionHandler('previoustrack',()=>loadAt(IDX-1,false))}catch{}
-      try{navigator.mediaSession.setActionHandler('nexttrack',()=>loadAt(IDX+1,false))}catch{}
-      try{navigator.mediaSession.setActionHandler('play',()=>nudgeAutoplay())}catch{}
-      try{navigator.mediaSession.setActionHandler('pause',()=>audio.pause())}catch{}
-    }
-
-    msgEl.textContent="";
-  }catch(e){
-    titleEl.textContent="Error loading player";
-    msgEl.className="subtle err";
-    msgEl.textContent=e.message;
-  }
-}
-boot();
-
-/* ---------------- Autoplay nudge (reliable, iOS-safe) ---------------- */
-audio.autoplay = true;
-async function nudgeAutoplay(){
-  try{ if(audio.paused) await audio.play(); }
-  catch{
-    const once = async ()=>{
-      try{ if(audio.paused) await audio.play(); }
-      finally{
-        document.removeEventListener('pointerdown', once, {capture:true});
-        document.removeEventListener('keydown',     once, {capture:true});
-      }
+    const items = await listDir(IMG_DIR);
+    const files = items.filter(x => /\.(gif|jpg|jpeg|png|webp)$/i.test(x.name)).map(x => x.path.replace(`${BASE_DIR}/`,'../'));
+    if(!files.length) return;
+    let idx = Math.floor(Math.random()*files.length);
+    const bg = $('#bg'), fade = $('#bg-fade');
+    const switchBg = () => {
+      fade.src = files[idx];
+      fade.onload = ()=>{
+        $('#playerCard').classList.add('is-hidden');    // hide glass box during crossfade
+        fade.classList.add('fade-on');
+        setTimeout(()=>{
+          bg.src = fade.src;
+          fade.classList.remove('fade-on');
+          $('#playerCard').classList.remove('is-hidden');
+        }, 700);
+      };
+      idx = (idx+1)%files.length;
     };
-    document.addEventListener('pointerdown', once, {capture:true, once:true});
-    document.addEventListener('keydown',     once, {capture:true, once:true});
+    // initial & rotate every 30s
+    bg.src = files[idx]; idx=(idx+1)%files.length;
+    setInterval(switchBg, 30000);
+  }catch(e){ console.warn('Backgrounds error', e); }
+}
+
+/* Music discovery (no playlists): list folders in release order, then *.mp3 inside each */
+async function discoverTracks(){
+  const tracks = [];
+  const folders = await listDir(MUSIC_DIR);
+  // map for quick lookup
+  const hasFolder = new Set(folders.filter(f=>f.type==='dir').map(f=>f.name));
+  for(const folder of ALBUMS_IN_ORDER){
+    if(!hasFolder.has(folder)) continue;
+    try{
+      const files = await listDir(`${MUSIC_DIR}/${folder}`);
+      const mp3s = files.filter(x=>/\.mp3$/i.test(x.name));
+      mp3s.sort((a,b)=> a.name.localeCompare(b.name, undefined, {numeric:true, sensitivity:'base'}));
+      for(const f of mp3s){
+        const url = '../' + f.path.replace(`${BASE_DIR}/`,''); // relative for Pages
+        const display = makeDisplayName(folder, f.name);
+        tracks.push({url, album:folder, name:display});
+      }
+    }catch(e){ console.warn('Folder read failed', folder, e); }
+  }
+  if(!tracks.length) throw new Error('No MP3s found');
+  return tracks;
+}
+
+/* Display naming: "Track Title · Album" (you asked for the dot before album name) */
+function makeDisplayName(albumFolder, fileName){
+  // album text = the last " - Title" token in folder name
+  const albumPretty = albumFolder.split(' - ').slice(-1)[0];
+  // strip extension + replace underscores with spaces; drop leading album keyword pieces
+  const base = fileName.replace(/\.mp3$/i,'').replace(/[_]+/g,' ').replace(/\s{2,}/g,' ').trim();
+  // If there's a number chunk like "_02_", try to grab the trailing title part
+  const parts = base.split(/\s*-\s*|\s{2,}/).slice(-1);
+  let title = base;
+  const m = base.match(/\d{1,2}[_\s.-]+(.+)$/);
+  if (m && m[1]) title = m[1].trim();
+  // Final style
+  return `${title} · ${albumPretty}`;
+}
+
+/* ========= Player ========== */
+const audio = $('#audio');
+const bar   = $('#bar');
+const time  = $('#time');
+const nowEl = $('#now');
+const errEl = $('#err');
+let queue = [];         // [{url, name, album}]
+let mode  = 'shuffle';  // 'shuffle' or 'album'
+let idx   = -1;
+let userInteracted = false;
+
+function pickNext(fromButton=false){
+  if(queue.length===0) return -1;
+  if(mode==='shuffle'){
+    // On shuffle switch, do not interrupt: if user pressed the Shuffle/Album buttons,
+    // we only change the *future* order. Current song keeps playing.
+    let n;
+    do { n = Math.floor(Math.random()*queue.length); } while (queue.length>1 && n===idx);
+    return n;
+  }else{ // album order
+    return (idx+1) % queue.length;
   }
 }
-window.addEventListener('load', ()=>nudgeAutoplay(), {once:true});
-document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') nudgeAutoplay(); });
 
-/* ---------------- Offline (with your existing service-worker.js) ---------------- */
-const offlineBtn=document.getElementById('offlineBtn');
-const bar=document.getElementById('progressBar');
-const ptxt=document.getElementById('progressText');
+async function startPlayback(i){
+  if(i<0) return;
+  idx = i;
+  const track = queue[idx];
+  nowEl.textContent = track.name;
+  audio.src = track.url;
+  audio.play().catch(()=>{/* will start on first gesture */});
+}
 
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('./service-worker.js'); }
-function postSW(msg){ if(navigator.serviceWorker?.controller){ navigator.serviceWorker.controller.postMessage(msg); } }
+function nextTrack(){ startPlayback(pickNext(true)); }
+function prevTrack(){
+  if(mode==='album'){ idx = (idx-1+queue.length)%queue.length; startPlayback(idx); }
+  else { startPlayback(pickNext(true)); }
+}
 
-navigator.serviceWorker?.addEventListener('message',(e)=>{
-  const {type,payload}=e.data||{};
-  if(type==='CACHE_PROGRESS'){
-    const {done,total}=payload; const pct=total?Math.round(done/total*100):0;
-    ptxt.textContent=`Offline caching: ${done} / ${total} (${pct}%)`; bar.style.width=pct+'%';
-    if(total && done===total) offlineBtn.classList.add('on');
-  }
+/* Progress + MediaSession */
+audio.addEventListener('timeupdate', ()=>{
+  if(audio.duration){ bar.value = audio.currentTime / audio.duration; }
+  time.textContent = `${fmtTime(audio.currentTime)} / ${fmtTime(audio.duration||0)}`;
 });
-offlineBtn.addEventListener('click',()=>{
-  if(!ORDER.length) return;
-  if(!offlineBtn.classList.contains('on')){
-    offlineBtn.classList.add('on'); offlineBtn.textContent='Offline ON — Tap to turn OFF';
-    ptxt.textContent='Preparing offline list…'; postSW({type:'CACHE_LIST',payload:{list:ORDER.slice()}});
-  }else{
-    const ok=confirm('Turn OFF offline mode and remove cached files?'); if(!ok) return;
-    offlineBtn.classList.remove('on'); offlineBtn.textContent='Turn Offline ON';
-    bar.style.width='0%'; ptxt.textContent='Offline caching: 0 / 0 (0%)'; postSW({type:'CLEAR_OFFLINE'});
-  }
-});
+audio.addEventListener('ended', nextTrack);
+if('mediaSession' in navigator){
+  navigator.mediaSession.setActionHandler('previoustrack', prevTrack);
+  navigator.mediaSession.setActionHandler('nexttrack', nextTrack);
+  navigator.mediaSession.setActionHandler('play', ()=>audio.play());
+  navigator.mediaSession.setActionHandler('pause', ()=>audio.pause());
+}
 
-/* ---------------- Screensaver fade (10s idle) ---------------- */
-let fadeTimer=null;
-function bump(){ clearTimeout(fadeTimer); document.body.classList.remove('fade'); fadeTimer=setTimeout(()=>document.body.classList.add('fade'),10000); }
-['mousemove','pointerdown','keydown','touchstart','wheel'].forEach(ev=>addEventListener(ev,bump,{passive:true}));
-bump();
+/* Buttons */
+$('#playBtn').onclick = async ()=>{
+  userInteracted = true;
+  if(audio.paused) await audio.play(); else audio.pause();
+};
+$('#prevBtn').onclick = ()=>{ userInteracted = true; prevTrack(); };
+$('#nextBtn').onclick = ()=>{ userInteracted = true; nextTrack(); };
+
+$('#shuffleBtn').onclick = ()=>{
+  mode='shuffle';
+  $('#shuffleBtn').classList.add('on');
+  $('#albumBtn').classList.remove('on');
+  // Do not stop the current track; new mode applies on next.
+};
+$('#albumBtn').onclick = ()=>{
+  mode='album';
+  $('#albumBtn').classList.add('on');
+  $('#shuffleBtn').classList.remove('on');
+  // Do not stop the current track.
+};
+
+$('#vol').addEventListener('input', e=> audio.volume = +e.target.value);
+
+/* Autoplay policy: try on load; if blocked on mobile, first tap anywhere enables it */
+document.addEventListener('pointerdown', ()=>{ if(!userInteracted){ userInteracted=true; audio.play().catch(()=>{}); }}, {once:true});
+
+/* ========= Offline (service worker assumed at /radio/service-worker.js) ========= */
+async function setupSW(){
+  if(!('serviceWorker' in navigator)) return;
+  try{
+    await navigator.serviceWorker.register('./service-worker.js', {scope:'./'});
+  }catch(e){ console.warn('SW register failed', e); }
+}
+const offlineBtn = $('#offlineBtn');
+let caching = false;
+offlineBtn.onclick = async ()=>{
+  if(caching) return;
+  caching = true;
+  offlineBtn.textContent = 'Caching…';
+  try{
+    const reg = await navigator.serviceWorker.ready;
+    reg.active && reg.active.postMessage({type:'CACHE_TRACKS', tracks: queue.map(t=>t.url)});
+  }catch(e){ console.warn(e); }
+  setTimeout(()=>{ offlineBtn.textContent = 'Turn Offline ON'; caching=false; }, 800);
+};
+
+/* ======== Init ======== */
+(async function init(){
+  try{
+    setupSW();
+    await loadBackgrounds();
+
+    errEl.textContent = 'Loading…';
+    queue = await discoverTracks();
+    errEl.textContent = '';
+
+    // Start with Shuffle, no interruption on mode toggle
+    mode='shuffle';
+    const first = pickNext();
+    await startPlayback(first);
+
+    // Try autoplay immediately; if blocked, first tap will start it.
+    audio.play().catch(()=>{/* ignored, handled by first gesture */});
+  }catch(e){
+    console.error(e);
+    errEl.textContent = 'Error loading player';
+  }
+})();
 </script>
 </body>
 </html>
