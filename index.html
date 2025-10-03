@@ -4,286 +4,275 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Grand Element Radio</title>
-<link rel="manifest" href="manifest.json">
 <style>
-  :root{ --fg:#eaf6ff; --accent:#5ec5ff; --accent2:#ff6a00; --muted:#1b2537; }
+  :root{--fg:#eaf6ff;--accent:#5ec5ff;--accent2:#ff6a00}
   *{box-sizing:border-box} html,body{height:100%}
-  body{ margin:0; min-height:100vh; color:var(--fg);
-        font-family:system-ui, Segoe UI, Roboto, Arial, sans-serif;
-        display:flex; overflow-x:hidden; background:#000; }
-  /* fixed wallpaper (iOS-friendly) */
-  body::before{
-    content:""; position:fixed; inset:0; z-index:-1;
-    background:#000 center/cover no-repeat;
-    background-image: var(--bg-img, none);
-    background-repeat:no-repeat; background-size:cover;
-    pointer-events:none; will-change: transform; transform: translateZ(0);
+  body{
+    margin:0; min-height:100vh; color:var(--fg);
+    font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;
+    background:#000; overflow-x:hidden;
   }
-  .wrap{ margin:auto; width:min(980px,94vw); padding:28px; text-align:center; }
-  .logo{ width:min(260px,60vw); height:auto; border-radius:50%;
-         filter: drop-shadow(0 0 24px rgba(94,197,255,.55)); margin:4px 0 12px; }
-  h1{margin:8px 0 6px; font-weight:800; letter-spacing:.3px; font-size:clamp(28px,6vw,44px)}
-  p.help{opacity:.90;margin:4px 0 10px}
-  p.refresh{opacity:.85;margin:0 0 14px}
-  .titlebar{ font-weight:700; margin:8px 0 14px; font-size:1.08rem }
-  .panel{ background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-          border:1px solid rgba(255,255,255,.10); border-radius:16px; padding:16px 14px;
-          box-shadow: 0 10px 30px rgba(0,0,0,.45); backdrop-filter: blur(2px); }
-  .controls{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:6px 0 10px}
-  .btn{ appearance:none; border:0; padding:10px 14px; border-radius:12px; background:#141d2b; color:#eaf6ff;
-        cursor:pointer; font-weight:700; border:1px solid rgba(255,255,255,.12); }
+  /* fixed wallpaper */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:-2;
+    background:#000 center/cover no-repeat;
+    background-image:var(--bg-img, none);
+    transform:translateZ(0); will-change:transform; pointer-events:none;
+  }
+
+  .wrap{margin:auto; width:min(980px,94vw); padding:28px; text-align:center}
+  .logo{width:min(260px,60vw); height:auto; border-radius:50%;
+        filter:drop-shadow(0 0 24px rgba(94,197,255,.55)); margin:6px 0 12px}
+  h1{margin:8px 0 4px; font-weight:800; letter-spacing:.3px}
+  p.help{opacity:.92; margin:2px 0 8px}
+
+  .panel,.offline{
+    background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));
+    border:1px solid rgba(255,255,255,.10); border-radius:16px; padding:16px 14px;
+    box-shadow:0 10px 30px rgba(0,0,0,.45); backdrop-filter:blur(2px);
+    transition:opacity .35s ease;
+  }
+  .controls{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:8px 0 12px}
+  .btn{
+    appearance:none; border:1px solid rgba(255,255,255,.12); padding:10px 14px; border-radius:12px;
+    background:#141d2b; color:#eaf6ff; cursor:pointer; font-weight:800;
+  }
   .btn:hover{background:#1b2537}
-  .btn.sel{ background:var(--accent); color:#03111b; border-color:transparent; }
-  audio{ width:100%; margin-top:8px; transform: scale(1.25); transform-origin: center top; }
-  .offline{ margin-top:14px }
-  .offbox{ margin-top:8px; padding:14px; border-radius:16px; border:1px solid rgba(255,255,255,.12);
-           background: rgba(15,22,36,.6); }
-  .progress{height:8px; background:#102033; border-radius:999px; overflow:hidden; margin-top:10px}
-  .bar{height:100%; width:0%; background:var(--accent); transition:width .15s linear}
-  a.button{ display:inline-block; padding:10px 18px; margin-top:16px; background:var(--accent2); color:#fff;
-            text-decoration:none; border-radius:10px; font-weight:800; box-shadow: 0 6px 16px rgba(255,106,0,.25); }
-  a.button:hover{ filter:brightness(1.05) }
-  .err{color:#ff8a8a; margin-top:10px} .ok{opacity:.85; font-size:.95rem; margin-top:6px}
+  .btn.on{background:var(--accent); color:#03111b; border-color:transparent}
+
+  audio{width:100%; margin-top:6px; transform:scale(1.12); transform-origin:center top}
+  .subtle{opacity:.85; font-size:.95rem; margin-top:8px}
+  .err{color:#ff8a8a}
+
+  .offline{margin-top:18px}
+  .bar{height:8px; background:#0e1624; border-radius:12px; overflow:hidden; margin:8px auto 0; width:min(540px,92%)}
+  .bar>span{display:block; height:100%; width:0%; background:var(--accent); transition:width .2s}
+
+  a.buy{display:inline-block; padding:10px 18px; margin-top:16px; background:var(--accent2); color:#fff;
+        text-decoration:none; border-radius:10px; font-weight:800; box-shadow:0 6px 16px rgba(255,106,0,.25)}
+  a.buy:hover{filter:brightness(1.05)}
+
   /* screensaver fade (10s idle) */
-  .chrome{ transition: opacity .6s ease } .dim .chrome{ opacity:0 }
+  .chrome{transition:opacity .35s ease}
+  .fade .chrome{opacity:0}
+  /* NEW: fully hide glass panels so no faint box remains */
+  .fade .panel, .fade .offline{
+    opacity:0 !important; background:transparent !important;
+    border-color:transparent !important; box-shadow:none !important;
+  }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <img src="img/logo.png" alt="Grand Element" class="logo chrome" />
+  <div class="wrap chrome">
+    <img src="img/logo.png" alt="Grand Element" class="logo" />
     <h1 class="chrome">Grand Element Radio</h1>
     <p class="help chrome">Music created to help set your soul free. Enjoy!!</p>
-    <p class="refresh chrome">Refresh the page for a new experience.</p>
+    <p class="help chrome">Refresh the page for a new experience.</p>
 
-    <div id="titlebar" class="titlebar chrome">Loading…</div>
-
-    <div class="panel">
-      <div class="controls chrome">
+    <div class="panel chrome">
+      <div id="title" style="font-weight:800; margin:6px 0 10px">Loading…</div>
+      <div class="controls">
         <button class="btn" id="prevBtn">Prev</button>
         <button class="btn" id="nextBtn">Next</button>
-        <button class="btn sel" id="shufBtn">Shuffle</button>
+        <button class="btn on" id="shuffleBtn">Shuffle</button>
         <button class="btn" id="albumBtn">Album order</button>
       </div>
-      <audio id="player" controls preload="none" class="chrome"></audio>
-      <div id="msg" class="ok"></div>
+      <audio id="player" controls preload="none" playsinline></audio>
+      <div id="msg" class="subtle"></div>
     </div>
 
     <div class="offline chrome">
-      <div class="offbox">
-        <div style="display:flex; align-items:center; gap:10px; justify-content:center; flex-wrap:wrap">
-          <button id="offlineBtn" class="btn">Turn Offline ON</button>
-          <span id="offStat">Offline caching: 0 / 0 (0%)</span>
-        </div>
-        <div class="progress"><div id="offBar" class="bar"></div></div>
-        <div id="offTip" class="ok">Tap to save music for offline use…</div>
-      </div>
+      <div style="font-weight:800; margin-bottom:8px">Offline Mode</div>
+      <button class="btn" id="offlineBtn">Turn Offline ON</button>
+      <div class="subtle" id="progressText">Offline caching: 0 / 0 (0%)</div>
+      <div class="bar"><span id="progressBar"></span></div>
+      <div class="subtle" style="margin-top:8px">Tap to save music for offline use…</div>
     </div>
 
-    <a class="button chrome" href="https://grandelement.bandcamp.com" target="_blank" rel="noopener">
-      Buy on Bandcamp
-    </a>
+    <p class="help chrome" style="margin-top:14px">
+      If you’d like to support the project, you can purchase the music below.
+    </p>
+    <a class="buy chrome" href="https://grandelement.bandcamp.com" target="_blank" rel="noopener">Buy on Bandcamp</a>
   </div>
 
 <script>
-/* ---------------- Site constants (edit if you rename repo/branch) ---------------- */
-const OWNER = 'grandelement';
-const REPO  = 'radio';
-const BRANCH = 'main';
-const MUSIC_DIR = 'music'; // top-level folder that contains album subfolders
-
-/* ---------------- Random background each load ---------------- */
-fetch('backgrounds.json', {cache:'no-store'})
-  .then(r => r.ok ? r.json() : [])
-  .then(list => { if(Array.isArray(list)&&list.length){
+/* ---------------- Backgrounds (random per refresh) ---------------- */
+fetch('backgrounds.json',{cache:'no-store'})
+  .then(r=>r.ok?r.json():[]).then(list=>{
+    if(Array.isArray(list)&&list.length){
       const pick=list[Math.floor(Math.random()*list.length)];
       document.body.style.setProperty('--bg-img','url("'+pick+'")');
-  }}).catch(()=>{});
-
-/* ---------------- Player state ---------------- */
-const audio = document.getElementById('player');
-const titleEl = document.getElementById('titlebar');
-const msg = document.getElementById('msg');
-const shufBtn = document.getElementById('shufBtn');
-const albumBtn = document.getElementById('albumBtn');
-const nextBtn = document.getElementById('nextBtn');
-const prevBtn = document.getElementById('prevBtn');
-
-let library=[], order=[], i=0;
-let albumMode=false;
-
-/* ---------------- Title parsing (Album • Title  /  Album • NN • Title) ---------------- */
-function tidyTitleLike(name, albumHint){
-  let base = decodeURIComponent(name).replace(/\.[^.]+$/,'').trim();
-  base = base.replace(/\s*=\s*/g,' = ').replace(/[_]+/g,' ').replace(/[-–—]+/g,'-').replace(/\s{2,}/g,' ').trim();
-
-  const normalize = s => (s||'').toLowerCase().replace(/[^a-z0-9]+/g,'');
-  const ah = normalize(albumHint), bnorm = normalize(base);
-  if (ah && bnorm.startsWith(ah)){
-    const ahWords = (albumHint||'').trim().split(/\s+/).join('[ _-]*');
-    const re = new RegExp('^\\s*' + ahWords + '[ _.-]*', 'i');
-    base = base.replace(re,'').trim();
-  }
-
-  let num=null, title=base;
-  const m = base.match(/^\s*(?:track\s*)?(\d{1,3})[)\.\-_\s]+(.+)$/i);
-  if(m){ num=m[1]; title=m[2]; }
-
-  title = title.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/\s{2,}/g,' ').trim();
-  const small = new Set(['and','or','of','the','a','an','in','on','to','for','at','by','from','with','vs']);
-  title = title.split(' ').map((w,idx,arr)=>{
-    const low=w.toLowerCase();
-    if(idx>0 && idx<arr.length-1 && small.has(low)) return low;
-    return w.charAt(0).toUpperCase()+w.slice(1);
-  }).join(' ');
-  return { num: num?String(num).padStart(2,'0'):null, title };
-}
-function parseAlbumTrack(urlPath){
-  const parts = urlPath.split('/');
-  const file = parts.at(-1)||'';
-  // album folder is the element right after MUSIC_DIR
-  const musicIdx = parts.indexOf(MUSIC_DIR);
-  let albumFolder = (musicIdx>=0 && parts[musicIdx+1]) ? decodeURIComponent(parts[musicIdx+1]) : '';
-  let album = albumFolder.split(' - ').pop().replace(/[_-]+/g,' ').trim();
-  const {num, title} = tidyTitleLike(file, album);
-  return {album, trackNo:num, title};
-}
-function showTitle(src){
-  const {album, trackNo, title} = parseAlbumTrack(src);
-  const dot=' • ';
-  titleEl.textContent = albumMode
-    ? `${album}${dot}${trackNo??''}${trackNo?dot:''}${title}`
-    : `${album?album+dot:''}${title}`;
-}
-
-/* ---------------- GitHub Contents API loader (no playlist.json needed) ---------------- */
-const GH_API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/`;
-const RAW_BASE = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/`;
-
-async function listGithubDir(path){
-  const r = await fetch(GH_API + encodeURIComponent(path) + `?ref=${BRANCH}`, {headers:{'Accept':'application/vnd.github.v3+json'}});
-  if(!r.ok) throw new Error(`GitHub API error: ${r.status}`);
-  return r.json();
-}
-function toRawUrl(path){ return RAW_BASE + path.split('/').map(encodeURIComponent).join('/'); }
-
-async function loadLibrary(){
-  const exts = /\.(mp3|m4a|wav|ogg)$/i;
-  const items = [];
-  // list albums under /music
-  const albums = await listGithubDir(MUSIC_DIR);
-  for(const a of albums){
-    if(a.type==='dir'){
-      const files = await listGithubDir(`${MUSIC_DIR}/${a.name}`);
-      for(const f of files){
-        if(f.type==='file' && exts.test(f.name)){
-          items.push(`${MUSIC_DIR}/${a.name}/${f.name}`);
-        }
-      }
     }
+  }).catch(()=>{});
+
+/* ---------------- Elements ---------------- */
+const audio = document.getElementById('player');
+const titleEl = document.getElementById('title');
+const msgEl   = document.getElementById('msg');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const shufBtn = document.getElementById('shuffleBtn');
+const albBtn  = document.getElementById('albumBtn');
+
+/* ---------------- Library & ordering ---------------- */
+let LIB=[], ORDER=[], IDX=0, shuffleOn=true;
+
+/* Title parsing based on folder layout: music/<AlbumFolder>/<TrackFile>.mp3 */
+function fmtTitle(path){
+  const parts = path.split('/');
+  const albumFull = parts.length>=3 ? parts[parts.length-2] : '';
+  const album = albumFull.replace(/^Grand Element - \d{4} - /,'').trim();
+  const base = parts[parts.length-1].replace(/\.[^.]+$/,'');
+  // optional NN_ prefix (02_Title) or Album_02_Title
+  const m = base.match(/(?:^|[_\-. ])(\d{2})[_\-. ]+(.+)$/);
+  const trackNum = m ? m[1] : null;
+  const song = (m ? m[2] : base)
+                .replace(/[_\-]+/g,' ')
+                .replace(/ +/g,' ')
+                .replace(/\s*=\s*/g,' = ')
+                .trim();
+  return {album, song, trackNum};
+}
+function setShuffleTitle(p){ const {album,song}=fmtTitle(p); titleEl.textContent=`${album} • ${song}`; }
+function setAlbumTitle(p){ const {album,song,trackNum}=fmtTitle(p); titleEl.textContent=`${album} • ${trackNum?trackNum+' • ':''}${song}`; }
+
+/* Build order but keep current song/time; no src swap unless needed */
+function buildOrder(keepSrc){
+  const cur = keepSrc || audio.currentSrc || '';
+  if(shuffleOn){
+    ORDER = LIB.slice();
+    for(let i=ORDER.length-1;i>0;i--){const j=(Math.random()*(i+1))|0; [ORDER[i],ORDER[j]]=[ORDER[j],ORDER[i]];}
+  }else{
+    ORDER = LIB.slice(); // album sequence is whatever your TXT lists
   }
-  // sort for album order (by folder then by filename)
-  items.sort((x,y)=> x.localeCompare(y, undefined, {numeric:true, sensitivity:'base'}));
-  library = items.map(p => toRawUrl(p));
-  if(!library.length) throw new Error('No audio files found in /music');
+  const keep = ORDER.findIndex(p=>cur.includes(p));
+  IDX = keep>=0 ? keep : 0;
 }
 
-/* ---------------- Order / play helpers ---------------- */
-function shuffled(arr){ const a=arr.slice(); for(let k=a.length-1;k>0;k--){const j=(Math.random()*(k+1))|0; [a[k],a[j]]=[a[j],a[k]]} return a; }
-function rebuildOrder(keepSrc, keepTime, wasPlaying){
-  order = albumMode ? library.slice() : shuffled(library);
-  if(keepSrc){ const keepIndex = order.indexOf(keepSrc); i = keepIndex>=0?keepIndex:0; } else { i=0; }
-  audio.src = order[i]; showTitle(order[i]);
-  if(keepTime!=null) audio.currentTime = keepTime;
-  if(wasPlaying) audio.play().catch(()=>{});
+/* Load at index without interrupt if it's already that src */
+function loadAt(i, keepTime=true){
+  if(!ORDER.length) return;
+  IDX = (i+ORDER.length)%ORDER.length;
+  const src = ORDER[IDX];
+  const was = audio.src;
+  const label = shuffleOn ? setShuffleTitle : setAlbumTitle;
+
+  if(!was || !was.includes(src)){
+    const t = keepTime ? audio.currentTime : 0;
+    audio.src = src + '?v=' + Date.now();
+    label(src);
+    audio.addEventListener('loadedmetadata', function once(){
+      audio.removeEventListener('loadedmetadata', once);
+      if(keepTime && t>0 && t<audio.duration) audio.currentTime = t;
+      nudgeAutoplay(); // keep rolling
+    });
+  }else{
+    label(src); // just update label
+  }
 }
-function loadTrack(idx){
-  if(!order.length) return;
-  i = (idx+order.length)%order.length;
-  audio.src = order[i]; showTitle(order[i]);
-  audio.play().catch(()=>{});
+
+/* Discover library from RADIO_TRACK_ORDER.txt (one path per line) */
+async function getLibrary(){
+  const r = await fetch('RADIO_TRACK_ORDER.txt',{cache:'no-store'});
+  if(!r.ok) throw new Error('RADIO_TRACK_ORDER.txt not found');
+  const txt = await r.text();
+  const lines = txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  return lines;
 }
 
 /* ---------------- Boot ---------------- */
 async function boot(){
   try{
-    await loadLibrary();              // ← pulls from GitHub API
-    rebuildOrder(null,null,false);    // start in shuffle presentation
-    // Media Session
+    LIB = await getLibrary();
+    buildOrder();
+    loadAt(IDX,false);
+
+    audio.addEventListener('ended', ()=>loadAt(IDX+1,false));
+    nextBtn.addEventListener('click', ()=>loadAt(IDX+1,true));
+    prevBtn.addEventListener('click', ()=>loadAt(IDX-1,true));
+
+    shufBtn.addEventListener('click', ()=>{
+      if(!shuffleOn){ shuffleOn=true; shufBtn.classList.add('on'); albBtn.classList.remove('on');
+        const cur=ORDER[IDX]; buildOrder(cur); loadAt(IDX,true);
+      }
+    });
+    albBtn.addEventListener('click', ()=>{
+      if(shuffleOn){ shuffleOn=false; albBtn.classList.add('on'); shufBtn.classList.remove('on');
+        const cur=ORDER[IDX]; buildOrder(cur); loadAt(IDX,true);
+      }
+    });
+
+    // Media Session integration
     if('mediaSession' in navigator){
-      const setMeta = () => {
-        const {album, trackNo, title} = parseAlbumTrack(order[i]);
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: albumMode && trackNo ? `${trackNo} • ${title}` : title,
-          artist:'Grand Element', album
-        });
-      };
-      audio.addEventListener('loadedmetadata', setMeta);
-      try{navigator.mediaSession.setActionHandler('previoustrack',()=>loadTrack(i-1))}catch{}
-      try{navigator.mediaSession.setActionHandler('nexttrack',()=>loadTrack(i+1))}catch{}
-      try{navigator.mediaSession.setActionHandler('play',()=>audio.play())}catch{}
+      const setMeta = (src)=>{const {album,song}=fmtTitle(src);navigator.mediaSession.metadata=new MediaMetadata({title:song,artist:'Grand Element',album});};
+      audio.addEventListener('playing',()=>{if(ORDER[IDX]) setMeta(ORDER[IDX]);});
+      try{navigator.mediaSession.setActionHandler('previoustrack',()=>loadAt(IDX-1,false))}catch{}
+      try{navigator.mediaSession.setActionHandler('nexttrack',()=>loadAt(IDX+1,false))}catch{}
+      try{navigator.mediaSession.setActionHandler('play',()=>nudgeAutoplay())}catch{}
       try{navigator.mediaSession.setActionHandler('pause',()=>audio.pause())}catch{}
     }
-    nextBtn.addEventListener('click',()=>loadTrack(i+1));
-    prevBtn.addEventListener('click',()=>loadTrack(i-1));
-    function applyMode(newAlbumMode){
-      if(albumMode===newAlbumMode) return;
-      const curSrc=order[i], t=audio.currentTime, playing=!audio.paused;
-      albumMode=newAlbumMode;
-      shufBtn.classList.toggle('sel',!albumMode);
-      albumBtn.classList.toggle('sel', albumMode);
-      rebuildOrder(curSrc,t,playing); // keep same track & time
-    }
-    shufBtn.addEventListener('click',()=>applyMode(false));
-    albumBtn.addEventListener('click',()=>applyMode(true));
-    window.addEventListener('keydown',e=>{
-      if(e.key==='ArrowRight'){e.preventDefault();loadTrack(i+1)}
-      if(e.key==='ArrowLeft'){e.preventDefault();loadTrack(i-1)}
-    });
-    audio.addEventListener('ended',()=>loadTrack(i+1));
-    audio.play().catch(()=>{}); // user tap may be required on iOS
-    msg.textContent='';
-  }catch(err){
-    titleEl.textContent='Error loading player';
-    msg.className='err';
-    msg.textContent=(err && err.message) ? err.message : String(err);
+
+    msgEl.textContent="";
+  }catch(e){
+    titleEl.textContent="Error loading player";
+    msgEl.className="subtle err";
+    msgEl.textContent=e.message;
   }
 }
 boot();
 
-/* ---------------- Screensaver fade (10s idle) ---------------- */
-let idleTimer=null, root=document.body;
-function armIdle(){ clearTimeout(idleTimer); root.classList.remove('dim'); idleTimer=setTimeout(()=>root.classList.add('dim'),10000); }
-['mousemove','mousedown','keydown','touchstart','touchmove','scroll'].forEach(ev=>window.addEventListener(ev,armIdle,{passive:true}));
-armIdle();
-
-/* ---------------- Offline (Service Worker) ---------------- */
-if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js',{scope:'./'}).catch(()=>{}); }
-const offBtn=document.getElementById('offlineBtn'), offStat=document.getElementById('offStat'),
-      offBar=document.getElementById('offBar'), offTip=document.getElementById('offTip');
-let caching=false,totalToCache=0,doneCache=0;
-function setOffUI(){ const pct=totalToCache?Math.floor((doneCache/totalToCache)*100):0;
-  offStat.textContent=`Offline caching: ${doneCache} / ${totalToCache} (${pct}%)`; offBar.style.width=pct+'%';
-  offBtn.textContent=caching?'Offline ON — Tap to turn OFF':'Turn Offline ON';
-  offBtn.classList.toggle('sel',caching);
+/* ---------------- Autoplay nudge (reliable, iOS-safe) ---------------- */
+audio.autoplay = true;
+async function nudgeAutoplay(){
+  try{ if(audio.paused) await audio.play(); }
+  catch{
+    const once = async ()=>{
+      try{ if(audio.paused) await audio.play(); }
+      finally{
+        document.removeEventListener('pointerdown', once, {capture:true});
+        document.removeEventListener('keydown',     once, {capture:true});
+      }
+    };
+    document.addEventListener('pointerdown', once, {capture:true, once:true});
+    document.addEventListener('keydown',     once, {capture:true, once:true});
+  }
 }
-offBtn.addEventListener('click', async ()=>{
-  const reg=await navigator.serviceWorker.getRegistration(); if(!reg||!reg.active){offTip.textContent='Offline helper not active yet…';return;}
-  if(!caching){
-    caching=true; doneCache=0; totalToCache=order.length; setOffUI();
-    offTip.textContent='Caching tracks for offline use…';
-    reg.active.postMessage({type:'CACHE_LIST', payload:{ list: order }}); // cache current order
-  }else{
-    const ok=confirm('Turn Offline OFF?\n\nRemove downloaded files to free space?');
-    if(ok){ reg.active.postMessage({type:'CLEAR_OFFLINE'}); doneCache=0; totalToCache=0; }
-    caching=false; setOffUI(); offTip.textContent='Tap to save music for offline use…';
+window.addEventListener('load', ()=>nudgeAutoplay(), {once:true});
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') nudgeAutoplay(); });
+
+/* ---------------- Offline (with your existing service-worker.js) ---------------- */
+const offlineBtn=document.getElementById('offlineBtn');
+const bar=document.getElementById('progressBar');
+const ptxt=document.getElementById('progressText');
+
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('./service-worker.js'); }
+function postSW(msg){ if(navigator.serviceWorker?.controller){ navigator.serviceWorker.controller.postMessage(msg); } }
+
+navigator.serviceWorker?.addEventListener('message',(e)=>{
+  const {type,payload}=e.data||{};
+  if(type==='CACHE_PROGRESS'){
+    const {done,total}=payload; const pct=total?Math.round(done/total*100):0;
+    ptxt.textContent=`Offline caching: ${done} / ${total} (${pct}%)`; bar.style.width=pct+'%';
+    if(total && done===total) offlineBtn.classList.add('on');
   }
 });
-navigator.serviceWorker?.addEventListener?.('message',(e)=>{
-  const {type,payload}=e.data||{};
-  if(type==='CACHE_PROGRESS'){ doneCache=payload.done||0; totalToCache=payload.total||0; setOffUI(); }
-  if(type==='CACHE_DONE'){ setOffUI(); offTip.textContent='Offline ready. You can go offline now.'; }
-  if(type==='CLEARED'){ doneCache=0; totalToCache=0; setOffUI(); offTip.textContent='Offline files removed.'; }
+offlineBtn.addEventListener('click',()=>{
+  if(!ORDER.length) return;
+  if(!offlineBtn.classList.contains('on')){
+    offlineBtn.classList.add('on'); offlineBtn.textContent='Offline ON — Tap to turn OFF';
+    ptxt.textContent='Preparing offline list…'; postSW({type:'CACHE_LIST',payload:{list:ORDER.slice()}});
+  }else{
+    const ok=confirm('Turn OFF offline mode and remove cached files?'); if(!ok) return;
+    offlineBtn.classList.remove('on'); offlineBtn.textContent='Turn Offline ON';
+    bar.style.width='0%'; ptxt.textContent='Offline caching: 0 / 0 (0%)'; postSW({type:'CLEAR_OFFLINE'});
+  }
 });
+
+/* ---------------- Screensaver fade (10s idle) ---------------- */
+let fadeTimer=null;
+function bump(){ clearTimeout(fadeTimer); document.body.classList.remove('fade'); fadeTimer=setTimeout(()=>document.body.classList.add('fade'),10000); }
+['mousemove','pointerdown','keydown','touchstart','wheel'].forEach(ev=>addEventListener(ev,bump,{passive:true}));
+bump();
 </script>
 </body>
 </html>
