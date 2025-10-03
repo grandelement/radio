@@ -6,81 +6,51 @@
 <title>Grand Element Radio</title>
 <link rel="manifest" href="manifest.json">
 <style>
-  :root{
-    --fg:#eaf6ff; --accent:#5ec5ff; --accent2:#ff6a00; --muted:#1b2537; --read:#0f1624;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; min-height:100vh; color:var(--fg);
-    font-family:system-ui, Segoe UI, Roboto, Arial, sans-serif;
-    display:flex; overflow-x:hidden; background:#000;
-  }
-
-  /* fixed wallpaper (works nicer on iOS than background-attachment:fixed) */
+  :root{ --fg:#eaf6ff; --accent:#5ec5ff; --accent2:#ff6a00; --muted:#1b2537; }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{ margin:0; min-height:100vh; color:var(--fg);
+        font-family:system-ui, Segoe UI, Roboto, Arial, sans-serif;
+        display:flex; overflow-x:hidden; background:#000; }
+  /* fixed wallpaper (iOS-friendly) */
   body::before{
     content:""; position:fixed; inset:0; z-index:-1;
     background:#000 center/cover no-repeat;
     background-image: var(--bg-img, none);
-    background-repeat:no-repeat;
-    background-size:cover;
-    pointer-events:none;        /* ignore touches */
-    will-change: transform;     /* smoother on iOS */
-    transform: translateZ(0);   /* force compositing */
+    background-repeat:no-repeat; background-size:cover;
+    pointer-events:none; will-change: transform; transform: translateZ(0);
   }
-
   .wrap{ margin:auto; width:min(980px,94vw); padding:28px; text-align:center; }
-
-  .logo{
-    width:min(260px,60vw); height:auto; border-radius:50%;
-    filter: drop-shadow(0 0 24px rgba(94,197,255,.55)); margin:4px 0 12px;
-  }
-
+  .logo{ width:min(260px,60vw); height:auto; border-radius:50%;
+         filter: drop-shadow(0 0 24px rgba(94,197,255,.55)); margin:4px 0 12px; }
   h1{margin:8px 0 6px; font-weight:800; letter-spacing:.3px; font-size:clamp(28px,6vw,44px)}
   p.help{opacity:.90;margin:4px 0 10px}
   p.refresh{opacity:.85;margin:0 0 14px}
-
   .titlebar{ font-weight:700; margin:8px 0 14px; font-size:1.08rem }
-
-  .panel{
-    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-    border:1px solid rgba(255,255,255,.10); border-radius:16px; padding:16px 14px;
-    box-shadow: 0 10px 30px rgba(0,0,0,.45); backdrop-filter: blur(2px);
-  }
-
+  .panel{ background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+          border:1px solid rgba(255,255,255,.10); border-radius:16px; padding:16px 14px;
+          box-shadow: 0 10px 30px rgba(0,0,0,.45); backdrop-filter: blur(2px); }
   .controls{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin:6px 0 10px}
-  .btn{
-    appearance:none; border:0; padding:10px 14px; border-radius:12px; background:#141d2b; color:#eaf6ff;
-    cursor:pointer; font-weight:700; border:1px solid rgba(255,255,255,.12);
-  }
+  .btn{ appearance:none; border:0; padding:10px 14px; border-radius:12px; background:#141d2b; color:#eaf6ff;
+        cursor:pointer; font-weight:700; border:1px solid rgba(255,255,255,.12); }
   .btn:hover{background:#1b2537}
   .btn.sel{ background:var(--accent); color:#03111b; border-color:transparent; }
-
   audio{ width:100%; margin-top:8px; transform: scale(1.25); transform-origin: center top; }
-
   .offline{ margin-top:14px }
   .offbox{ margin-top:8px; padding:14px; border-radius:16px; border:1px solid rgba(255,255,255,.12);
            background: rgba(15,22,36,.6); }
   .progress{height:8px; background:#102033; border-radius:999px; overflow:hidden; margin-top:10px}
   .bar{height:100%; width:0%; background:var(--accent); transition:width .15s linear}
-
-  a.button{
-    display:inline-block; padding:10px 18px; margin-top:16px; background:var(--accent2); color:#fff;
-    text-decoration:none; border-radius:10px; font-weight:800; box-shadow: 0 6px 16px rgba(255,106,0,.25);
-  }
+  a.button{ display:inline-block; padding:10px 18px; margin-top:16px; background:var(--accent2); color:#fff;
+            text-decoration:none; border-radius:10px; font-weight:800; box-shadow: 0 6px 16px rgba(255,106,0,.25); }
   a.button:hover{ filter:brightness(1.05) }
-
   .err{color:#ff8a8a; margin-top:10px} .ok{opacity:.85; font-size:.95rem; margin-top:6px}
-
-  /* screensaver fade (10s inactivity) */
-  .chrome{ transition: opacity .6s ease }
-  .dim .chrome{ opacity:0 }
+  /* screensaver fade (10s idle) */
+  .chrome{ transition: opacity .6s ease } .dim .chrome{ opacity:0 }
 </style>
 </head>
 <body>
   <div class="wrap">
     <img src="img/logo.png" alt="Grand Element" class="logo chrome" />
-
     <h1 class="chrome">Grand Element Radio</h1>
     <p class="help chrome">Music created to help set your soul free. Enjoy!!</p>
     <p class="refresh chrome">Refresh the page for a new experience.</p>
@@ -89,10 +59,10 @@
 
     <div class="panel">
       <div class="controls chrome">
-        <button class="btn" id="prevBtn" title="Previous (Left Arrow)">Prev</button>
-        <button class="btn" id="nextBtn" title="Next (Right Arrow)">Next</button>
-        <button class="btn sel" id="shufBtn" title="Shuffle">Shuffle</button>
-        <button class="btn" id="albumBtn" title="Album order">Album order</button>
+        <button class="btn" id="prevBtn">Prev</button>
+        <button class="btn" id="nextBtn">Next</button>
+        <button class="btn sel" id="shufBtn">Shuffle</button>
+        <button class="btn" id="albumBtn">Album order</button>
       </div>
       <audio id="player" controls preload="none" class="chrome"></audio>
       <div id="msg" class="ok"></div>
@@ -115,248 +85,200 @@
   </div>
 
 <script>
-/* -------------------- Random background on each load -------------------- */
+/* ---------------- Site constants (edit if you rename repo/branch) ---------------- */
+const OWNER = 'grandelement';
+const REPO  = 'radio';
+const BRANCH = 'main';
+const MUSIC_DIR = 'music'; // top-level folder that contains album subfolders
+
+/* ---------------- Random background each load ---------------- */
 fetch('backgrounds.json', {cache:'no-store'})
   .then(r => r.ok ? r.json() : [])
-  .then(list => {
-    if (Array.isArray(list) && list.length) {
-      const pick = list[Math.floor(Math.random() * list.length)];
-      document.body.style.setProperty('--bg-img', 'url("' + pick + '")');
-    }
-  }).catch(()=>{});
+  .then(list => { if(Array.isArray(list)&&list.length){
+      const pick=list[Math.floor(Math.random()*list.length)];
+      document.body.style.setProperty('--bg-img','url("'+pick+'")');
+  }}).catch(()=>{});
 
-/* -------------------- Player core -------------------- */
+/* ---------------- Player state ---------------- */
 const audio = document.getElementById('player');
 const titleEl = document.getElementById('titlebar');
 const msg = document.getElementById('msg');
-
 const shufBtn = document.getElementById('shufBtn');
 const albumBtn = document.getElementById('albumBtn');
 const nextBtn = document.getElementById('nextBtn');
 const prevBtn = document.getElementById('prevBtn');
 
-let items=[], library=[], order=[], i=0;
-let albumMode = false;   // false = shuffle display, true = album order display
+let library=[], order=[], i=0;
+let albumMode=false;
 
-/* --------- Title parsing that matches your folder scheme ---------- */
-// Clean one filename → { num:"NN"|null, title:"Nice Title" }.
+/* ---------------- Title parsing (Album • Title  /  Album • NN • Title) ---------------- */
 function tidyTitleLike(name, albumHint){
   let base = decodeURIComponent(name).replace(/\.[^.]+$/,'').trim();
+  base = base.replace(/\s*=\s*/g,' = ').replace(/[_]+/g,' ').replace(/[-–—]+/g,'-').replace(/\s{2,}/g,' ').trim();
 
-  base = base
-    .replace(/\s*=\s*/g,' = ')
-    .replace(/[_]+/g,' ')
-    .replace(/[-–—]+/g,'-')
-    .replace(/\s{2,}/g,' ')
-    .trim();
-
-  // remove duplicated album prefix if present (e.g., "FundamentalGroove_02_Prelude")
   const normalize = s => (s||'').toLowerCase().replace(/[^a-z0-9]+/g,'');
-  const ah = normalize(albumHint);
-  const bnorm = normalize(base);
-  if (ah && bnorm.startsWith(ah)) {
+  const ah = normalize(albumHint), bnorm = normalize(base);
+  if (ah && bnorm.startsWith(ah)){
     const ahWords = (albumHint||'').trim().split(/\s+/).join('[ _-]*');
     const re = new RegExp('^\\s*' + ahWords + '[ _.-]*', 'i');
-    base = base.replace(re, '').trim();
+    base = base.replace(re,'').trim();
   }
 
-  // optional leading track number
-  let num = null, title = base;
+  let num=null, title=base;
   const m = base.match(/^\s*(?:track\s*)?(\d{1,3})[)\.\-_\s]+(.+)$/i);
-  if (m) { num = m[1]; title = m[2]; }
+  if(m){ num=m[1]; title=m[2]; }
 
-  // CamelCase → space; Title case (keep small words)
   title = title.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/\s{2,}/g,' ').trim();
   const small = new Set(['and','or','of','the','a','an','in','on','to','for','at','by','from','with','vs']);
-  const words = title.split(' ').filter(Boolean);
-  title = words.map((w,i)=>{
-    const low = w.toLowerCase();
-    if (i>0 && i<words.length-1 && small.has(low)) return low;
-    return w.charAt(0).toUpperCase() + w.slice(1);
+  title = title.split(' ').map((w,idx,arr)=>{
+    const low=w.toLowerCase();
+    if(idx>0 && idx<arr.length-1 && small.has(low)) return low;
+    return w.charAt(0).toUpperCase()+w.slice(1);
   }).join(' ');
-
-  return { num: num ? String(num).padStart(2,'0') : null, title };
+  return { num: num?String(num).padStart(2,'0'):null, title };
 }
-
-// path → { album, trackNo, title }
-function parseAlbumTrack(path){
-  const bits = path.split('/');
-  const file = bits.at(-1) || '';
-  // Album from folder name under /music (handles "Grand Element - 2005 - Fundamental Groove")
-  let folderName = bits.length>=3 ? decodeURIComponent(bits[1]).trim() : '';
-  let album = folderName.split(' - ').pop().replace(/[_-]+/g,' ').trim();
-
-  const { num, title } = tidyTitleLike(file, album);
-  return { album, trackNo: num, title };
+function parseAlbumTrack(urlPath){
+  const parts = urlPath.split('/');
+  const file = parts.at(-1)||'';
+  // album folder is the element right after MUSIC_DIR
+  const musicIdx = parts.indexOf(MUSIC_DIR);
+  let albumFolder = (musicIdx>=0 && parts[musicIdx+1]) ? decodeURIComponent(parts[musicIdx+1]) : '';
+  let album = albumFolder.split(' - ').pop().replace(/[_-]+/g,' ').trim();
+  const {num, title} = tidyTitleLike(file, album);
+  return {album, trackNo:num, title};
 }
-
 function showTitle(src){
   const {album, trackNo, title} = parseAlbumTrack(src);
-  const dot = ' • ';
-  // no stray leading dot: only add album part if album exists
+  const dot=' • ';
   titleEl.textContent = albumMode
-    ? `${album}${dot}${trackNo ?? ''}${trackNo ? dot : ''}${title}`
-    : `${album ? album + dot : ''}${title}`;
+    ? `${album}${dot}${trackNo??''}${trackNo?dot:''}${title}`
+    : `${album?album+dot:''}${title}`;
 }
 
-/* -------------------- Load library -------------------- */
+/* ---------------- GitHub Contents API loader (no playlist.json needed) ---------------- */
+const GH_API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/`;
+const RAW_BASE = `https://raw.githubusercontent.com/${OWNER}/${REPO}/${BRANCH}/`;
+
+async function listGithubDir(path){
+  const r = await fetch(GH_API + encodeURIComponent(path) + `?ref=${BRANCH}`, {headers:{'Accept':'application/vnd.github.v3+json'}});
+  if(!r.ok) throw new Error(`GitHub API error: ${r.status}`);
+  return r.json();
+}
+function toRawUrl(path){ return RAW_BASE + path.split('/').map(encodeURIComponent).join('/'); }
+
 async function loadLibrary(){
-  // Use playlist.json if present (keeps your current working behavior)
-  try{
-    const r=await fetch('playlist.json',{cache:'no-store'});
-    if(r.ok){
-      const raw=await r.json();
-      items = raw.map(x=>typeof x==='string'?({src:x}):x);
-      library = items.map(o=>o.src);
-      return;
+  const exts = /\.(mp3|m4a|wav|ogg)$/i;
+  const items = [];
+  // list albums under /music
+  const albums = await listGithubDir(MUSIC_DIR);
+  for(const a of albums){
+    if(a.type==='dir'){
+      const files = await listGithubDir(`${MUSIC_DIR}/${a.name}`);
+      for(const f of files){
+        if(f.type==='file' && exts.test(f.name)){
+          items.push(`${MUSIC_DIR}/${a.name}/${f.name}`);
+        }
+      }
     }
-  }catch(e){}
-  throw new Error('playlist.json not found');
+  }
+  // sort for album order (by folder then by filename)
+  items.sort((x,y)=> x.localeCompare(y, undefined, {numeric:true, sensitivity:'base'}));
+  library = items.map(p => toRawUrl(p));
+  if(!library.length) throw new Error('No audio files found in /music');
 }
 
-/* -------------------- Order / play helpers -------------------- */
+/* ---------------- Order / play helpers ---------------- */
 function shuffled(arr){ const a=arr.slice(); for(let k=a.length-1;k>0;k--){const j=(Math.random()*(k+1))|0; [a[k],a[j]]=[a[j],a[k]]} return a; }
-
 function rebuildOrder(keepSrc, keepTime, wasPlaying){
   order = albumMode ? library.slice() : shuffled(library);
-  if (keepSrc){
-    const keepIndex = order.indexOf(keepSrc);
-    i = keepIndex >= 0 ? keepIndex : 0;
-  } else {
-    i = 0;
-  }
-  audio.src = order[i];
-  showTitle(order[i]);
-  if (keepTime!=null) audio.currentTime = keepTime;
-  if (wasPlaying) audio.play().catch(()=>{});
+  if(keepSrc){ const keepIndex = order.indexOf(keepSrc); i = keepIndex>=0?keepIndex:0; } else { i=0; }
+  audio.src = order[i]; showTitle(order[i]);
+  if(keepTime!=null) audio.currentTime = keepTime;
+  if(wasPlaying) audio.play().catch(()=>{});
 }
-
-function loadTrack(nextIndex){
+function loadTrack(idx){
   if(!order.length) return;
-  i = (nextIndex+order.length) % order.length;
-  const src = order[i];
-  audio.src = src;
-  showTitle(src);
+  i = (idx+order.length)%order.length;
+  audio.src = order[i]; showTitle(order[i]);
   audio.play().catch(()=>{});
 }
 
-/* -------------------- Boot -------------------- */
+/* ---------------- Boot ---------------- */
 async function boot(){
   try{
-    await loadLibrary();
-    // initial order is shuffle ON by default (albumMode=false)
-    rebuildOrder(null, null, false);
-
-    // media session
+    await loadLibrary();              // ← pulls from GitHub API
+    rebuildOrder(null,null,false);    // start in shuffle presentation
+    // Media Session
     if('mediaSession' in navigator){
       const setMeta = () => {
         const {album, trackNo, title} = parseAlbumTrack(order[i]);
         navigator.mediaSession.metadata = new MediaMetadata({
           title: albumMode && trackNo ? `${trackNo} • ${title}` : title,
-          artist:'Grand Element',
-          album: album
+          artist:'Grand Element', album
         });
       };
       audio.addEventListener('loadedmetadata', setMeta);
-      try{navigator.mediaSession.setActionHandler('previoustrack',()=>loadTrack(i-1))}catch(e){}
-      try{navigator.mediaSession.setActionHandler('nexttrack',()=>loadTrack(i+1))}catch(e){}
-      try{navigator.mediaSession.setActionHandler('play',()=>audio.play())}catch(e){}
-      try{navigator.mediaSession.setActionHandler('pause',()=>audio.pause())}catch(e){}
+      try{navigator.mediaSession.setActionHandler('previoustrack',()=>loadTrack(i-1))}catch{}
+      try{navigator.mediaSession.setActionHandler('nexttrack',()=>loadTrack(i+1))}catch{}
+      try{navigator.mediaSession.setActionHandler('play',()=>audio.play())}catch{}
+      try{navigator.mediaSession.setActionHandler('pause',()=>audio.pause())}catch{}
     }
-
-    // controls
     nextBtn.addEventListener('click',()=>loadTrack(i+1));
     prevBtn.addEventListener('click',()=>loadTrack(i-1));
-
-    // toggle modes WITHOUT restarting the song
     function applyMode(newAlbumMode){
-      if (albumMode === newAlbumMode) return;
-      const curSrc = order[i];
-      const t = audio.currentTime;
-      const playing = !audio.paused;
-      albumMode = newAlbumMode;
-      shufBtn.classList.toggle('sel', !albumMode);
-      albumBtn.classList.toggle('sel',  albumMode);
-      rebuildOrder(curSrc, t, playing); // keep src/time/state
+      if(albumMode===newAlbumMode) return;
+      const curSrc=order[i], t=audio.currentTime, playing=!audio.paused;
+      albumMode=newAlbumMode;
+      shufBtn.classList.toggle('sel',!albumMode);
+      albumBtn.classList.toggle('sel', albumMode);
+      rebuildOrder(curSrc,t,playing); // keep same track & time
     }
     shufBtn.addEventListener('click',()=>applyMode(false));
     albumBtn.addEventListener('click',()=>applyMode(true));
-
-    // keyboard
     window.addEventListener('keydown',e=>{
-      if(e.key==='ArrowRight'){e.preventDefault(); loadTrack(i+1)}
-      if(e.key==='ArrowLeft'){ e.preventDefault(); loadTrack(i-1)}
+      if(e.key==='ArrowRight'){e.preventDefault();loadTrack(i+1)}
+      if(e.key==='ArrowLeft'){e.preventDefault();loadTrack(i-1)}
     });
-
-    // continue automatically
     audio.addEventListener('ended',()=>loadTrack(i+1));
-
-    // start first track (user interaction usually required on phones)
-    audio.play().catch(()=>{ /* user will tap play */ });
-
+    audio.play().catch(()=>{}); // user tap may be required on iOS
     msg.textContent='';
   }catch(err){
     titleEl.textContent='Error loading player';
     msg.className='err';
-    msg.textContent=err.message || String(err);
+    msg.textContent=(err && err.message) ? err.message : String(err);
   }
 }
 boot();
 
-/* -------------------- Screensaver fade (10s idle) -------------------- */
+/* ---------------- Screensaver fade (10s idle) ---------------- */
 let idleTimer=null, root=document.body;
-function armIdle(){
-  clearTimeout(idleTimer);
-  root.classList.remove('dim');
-  idleTimer=setTimeout(()=>root.classList.add('dim'), 10000);
-}
+function armIdle(){ clearTimeout(idleTimer); root.classList.remove('dim'); idleTimer=setTimeout(()=>root.classList.add('dim'),10000); }
 ['mousemove','mousedown','keydown','touchstart','touchmove','scroll'].forEach(ev=>window.addEventListener(ev,armIdle,{passive:true}));
 armIdle();
 
-/* -------------------- Offline controls (Service Worker) -------------------- */
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('service-worker.js',{scope:'./'}).catch(()=>{});
+/* ---------------- Offline (Service Worker) ---------------- */
+if('serviceWorker' in navigator){ navigator.serviceWorker.register('service-worker.js',{scope:'./'}).catch(()=>{}); }
+const offBtn=document.getElementById('offlineBtn'), offStat=document.getElementById('offStat'),
+      offBar=document.getElementById('offBar'), offTip=document.getElementById('offTip');
+let caching=false,totalToCache=0,doneCache=0;
+function setOffUI(){ const pct=totalToCache?Math.floor((doneCache/totalToCache)*100):0;
+  offStat.textContent=`Offline caching: ${doneCache} / ${totalToCache} (${pct}%)`; offBar.style.width=pct+'%';
+  offBtn.textContent=caching?'Offline ON — Tap to turn OFF':'Turn Offline ON';
+  offBtn.classList.toggle('sel',caching);
 }
-
-const offBtn = document.getElementById('offlineBtn');
-const offStat = document.getElementById('offStat');
-const offBar  = document.getElementById('offBar');
-const offTip  = document.getElementById('offTip');
-
-let caching=false, totalToCache=0, doneCache=0;
-
-function setOffUI(){
-  const pct = totalToCache ? Math.floor((doneCache/totalToCache)*100) : 0;
-  offStat.textContent = `Offline caching: ${doneCache} / ${totalToCache} (${pct}%)`;
-  offBar.style.width = pct + '%';
-  offBtn.textContent = caching ? 'Offline ON — Tap to turn OFF' : 'Turn Offline ON';
-  offBtn.classList.toggle('sel', caching);
-}
-
 offBtn.addEventListener('click', async ()=>{
-  const reg = await navigator.serviceWorker.getRegistration();
-  if(!reg || !reg.active){ offTip.textContent='Offline helper not active yet…'; return; }
-
+  const reg=await navigator.serviceWorker.getRegistration(); if(!reg||!reg.active){offTip.textContent='Offline helper not active yet…';return;}
   if(!caching){
-    // turn ON → send list to cache
-    caching=true; doneCache=0; totalToCache=order.length;
-    setOffUI();
+    caching=true; doneCache=0; totalToCache=order.length; setOffUI();
     offTip.textContent='Caching tracks for offline use…';
-    reg.active.postMessage({type:'CACHE_LIST', payload:{ list: library }});
+    reg.active.postMessage({type:'CACHE_LIST', payload:{ list: order }}); // cache current order
   }else{
-    // turn OFF → ask if we should clear cache
-    const ok = confirm('Turn Offline OFF?\n\nRemove downloaded files to free space?');
-    if(ok){
-      reg.active.postMessage({type:'CLEAR_OFFLINE'});
-      doneCache=0; totalToCache=0;
-    }
-    caching=false;
-    setOffUI();
-    offTip.textContent='Tap to save music for offline use…';
+    const ok=confirm('Turn Offline OFF?\n\nRemove downloaded files to free space?');
+    if(ok){ reg.active.postMessage({type:'CLEAR_OFFLINE'}); doneCache=0; totalToCache=0; }
+    caching=false; setOffUI(); offTip.textContent='Tap to save music for offline use…';
   }
 });
-
-navigator.serviceWorker?.addEventListener?.('message', (e)=>{
+navigator.serviceWorker?.addEventListener?.('message',(e)=>{
   const {type,payload}=e.data||{};
   if(type==='CACHE_PROGRESS'){ doneCache=payload.done||0; totalToCache=payload.total||0; setOffUI(); }
   if(type==='CACHE_DONE'){ setOffUI(); offTip.textContent='Offline ready. You can go offline now.'; }
