@@ -7,6 +7,7 @@
   <meta name="theme-color" content="#03111b">
   <style>
     :root { --fg:#eaf6ff; --accent:#5ec5ff; --accent2:#ff6a00; --muted:#1b2537; --ready:#21c45a; }
+<<<<<<< HEAD
     *{box-sizing:border-box}
     html,body{height:100%; margin:0; background:#000; color:var(--fg); font-family:system-ui, Segoe UI, Roboto, Arial, sans-serif;}
 
@@ -22,6 +23,22 @@
       will-change:transform;
       transform:translateZ(0);
     }
+=======
+    *{box-sizing:border-box} html,body{height:100%}
+    body{ margin:0; min-height:100vh; color:var(--fg); font-family:system-ui, Segoe UI, Roboto, Arial, sans-serif;
+          display:flex; overflow-x:hidden; background:#000; }
+    body::before{
+  content:""; position:fixed; inset:0; z-index:-1;
+  background-color:#000;
+  background-image: var(--bg-img, none);
+  background-position:center center;
+  background-repeat:no-repeat;
+  background-size:cover;
+  pointer-events:none;           /* ignore touches */
+  will-change: transform;        /* smoother on iOS */
+  transform: translateZ(0);      /* force compositing */
+}
+>>>>>>> cb0020767c58128724ac98a01765e3b3f7f42835
 
     .wrap.ui{ margin:auto; width:min(980px,94vw); padding:28px; text-align:center; transition: opacity .4s ease; }
     .ui.hidden{ opacity:0; pointer-events:none; }
