@@ -10,8 +10,17 @@
     *{box-sizing:border-box} html,body{height:100%}
     body{ margin:0; min-height:100vh; color:var(--fg); font-family:system-ui, Segoe UI, Roboto, Arial, sans-serif;
           display:flex; overflow-x:hidden; background:#000; }
-    body::before{ content:""; position:fixed; inset:0; z-index:-1; background:#000 center/cover no-repeat fixed;
-      background-image: var(--bg-img, none); }
+    body::before{
+  content:""; position:fixed; inset:0; z-index:-1;
+  background-color:#000;
+  background-image: var(--bg-img, none);
+  background-position:center center;
+  background-repeat:no-repeat;
+  background-size:cover;
+  pointer-events:none;           /* ignore touches */
+  will-change: transform;        /* smoother on iOS */
+  transform: translateZ(0);      /* force compositing */
+}
 
     .wrap.ui{ margin:auto; width:min(980px,94vw); padding:28px; text-align:center; transition: opacity .4s ease; }
     .ui.hidden { opacity:0; pointer-events:none; }
