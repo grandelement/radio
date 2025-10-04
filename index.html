@@ -8,7 +8,14 @@
 :root{--fg:#eaf6ff;--accent:#5ec5ff;--accent2:#ff6a00}
 *{box-sizing:border-box} html,body{height:100%}
 body{margin:0;min-height:100vh;background:#000;color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
-#wall{position:fixed;inset:0;z-index:-1;background:#000 center/cover no-repeat fixed}
+#wall {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: #000 center/cover no-repeat;
+  background-attachment: fixed;
+}
+
 
 /* content */
 .wrap{margin:auto;width:min(980px,94vw);padding:28px;text-align:center}
