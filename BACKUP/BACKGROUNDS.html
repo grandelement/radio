@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GE Background</title>
+  <meta name="robots" content="noindex" />
+  <style>
+    /* Full-bleed black canvas */
+    html,body{height:100%;margin:0}
+    body{
+      background:#000 center/cover no-repeat fixed;
+    }
+    /* Optional: fade-in so swaps feel smooth */
+    .fade{
+      animation:fadein .6s ease both;
+    }
+    @keyframes fadein{from{opacity:0}to{opacity:1}}
+  </style>
+</head>
+<body class="fade">
+<script>
+/*
+  === HOW TO USE ===
+  1) Put your images in /img/ (same repo).
+  2) Edit the list below so it matches your filenames.
+  3) Each reload shows one at random. That's it.
+*/
+
+const BACKGROUNDS = [
+  // ---- EDIT THESE LINES (add/remove) ----
+  "img/1.gif",
+  "img/5.gif",
+  "img/logo.png"
+  // ---------------------------------------
+];
+
+// Choose a random image
+(function setRandomBackground(){
+  if (!BACKGROUNDS.length) return;
+  const pick = BACKGROUNDS[Math.floor(Math.random()*BACKGROUNDS.length)];
+  // Bust hard cache for GIFs when you want—toggle to true if needed.
+  const bust = /\\.gif$/i.test(pick) ? (`${pick}?t=`+Date.now()) : pick;
+  document.body.style.backgroundImage = `url("${bust}")`;
+})();
+</script>
+</body>
+</html>
