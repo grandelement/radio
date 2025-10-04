@@ -5,38 +5,34 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Grand Element Radio</title>
 <style>
-:root{--fg:#eaf6ff;--accent:#5ec5ff;--accent2:#ff6a00;--muted:#1b2537;}
-*{box-sizing:border-box}
-html,body{height:100%}
-body{margin:0;min-height:100vh;color:var(--fg);font-family:system-ui,"Segoe UI",Roboto,Arial,sans-serif;display:flex;background:#000;overflow-x:hidden}
-/* fixed wallpaper layer */
+:root{--fg:#eaf6ff;--accent:#5ec5ff;--accent2:#ff6a00;--glass:rgba(255,255,255,.06);--glass2:rgba(255,255,255,.02)}
+*{box-sizing:border-box} html,body{height:100%}
+body{margin:0;min-height:100vh;background:#000;color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
 #wall{position:fixed;inset:0;z-index:-1;background:#000 center/cover no-repeat fixed}
-/* layout */
 .wrap{margin:auto;width:min(980px,94vw);padding:28px;text-align:center}
+#hud{transition:opacity .45s ease} #hud.dim{opacity:0}
 .logo{width:min(260px,60vw);height:auto;border-radius:50%;filter:drop-shadow(0 0 24px rgba(94,197,255,.55));margin:4px 0 12px}
 h1{margin:8px 0 2px;font-weight:800;letter-spacing:.3px}
 p.help{opacity:.95;margin:4px 0 10px}
-.panel{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:16px 14px;box-shadow:0 10px 30px rgba(0,0,0,.45);backdrop-filter:blur(2px)}
-.now{font-weight:700;margin:8px 0 12px;font-size:1.2rem}
+.panel{background:linear-gradient(180deg,var(--glass),var(--glass2));border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:16px 14px;box-shadow:0 10px 30px rgba(0,0,0,.45);backdrop-filter:blur(2px)}
+.now{font-weight:800;margin:8px 0 12px;font-size:1.15rem;min-height:1.2em}
 .controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:8px 0 8px}
-.btn{appearance:none;border:0;padding:10px 14px;border-radius:12px;background:#141d2b;color:#eaf6ff;cursor:pointer;font-weight:700;border:1px solid rgba(255,255,255,.12)}
+.btn{appearance:none;border:1px solid rgba(255,255,255,.12);padding:10px 14px;border-radius:12px;background:#141d2b;color:#eaf6ff;cursor:pointer;font-weight:800;transition:.15s}
 .btn:hover{background:#1b2537}
-.btn.accent{background:var(--accent);color:#03111b;border-color:transparent}
-.btn.accent[aria-pressed="true"]{filter:brightness(1.05)}
-audio{width:100%;margin-top:10px;transform:scale(1.2);transform-origin:center top}
+.btn.on{background:var(--accent);color:#03111b;border-color:transparent}
+audio{width:100%;margin-top:10px;transform:scale(1.15);transform-origin:center top}
 a.button{display:inline-block;padding:10px 18px;margin-top:14px;background:var(--accent2);color:#fff;text-decoration:none;border-radius:10px;font-weight:800;box-shadow:0 6px 16px rgba(255,106,0,.25)}
 a.button:hover{filter:brightness(1.05)}
-.err{color:#ff8a8a;margin-top:10px}
+.err{color:#ff8a8a;margin:10px 0 0}
 .hidden{display:none}
-/* fade-to-screensaver (now hides hero + controls) */
-#hud{transition:opacity .5s ease}
-#hud.dim{opacity:0}
+.meter{height:8px;background:#0f1826;border-radius:999px;overflow:hidden;max-width:520px;margin:8px auto 0}
+.meter>span{display:block;height:100%;width:0%;background:var(--accent);transition:width .2s}
+#offlineBtn.on{background:#2ecc71 !important;color:#021 !important;border-color:transparent !important}
 </style>
 </head>
 <body>
   <div id="wall"></div>
 
-  <!-- Everything that should fade is inside #hud -->
   <div id="hud" class="wrap">
     <img src="img/logo.png" alt="Grand Element" class="logo" onerror="this.style.display='none'"/>
     <h1>Grand Element Radio</h1>
@@ -46,23 +42,21 @@ a.button:hover{filter:brightness(1.05)}
     <div id="banner" class="err hidden">Error loading player</div>
 
     <div class="panel">
-      <div class="now" id="now">Loading…</div>
+      <div id="now" class="now">Loading…</div>
       <div class="controls">
-        <button class="btn" id="prevBtn" title="Previous (Left Arrow)">Prev</button>
-        <button class="btn" id="nextBtn" title="Next (Right Arrow)">Next</button>
-        <button class="btn accent" id="shuffleBtn" aria-pressed="true">Shuffle</button>
-        <button class="btn" id="albumBtn" aria-pressed="false">Album order</button>
+        <button class="btn" id="prevBtn">Prev</button>
+        <button class="btn" id="nextBtn">Next</button>
+        <button class="btn on" id="shuffleBtn">Shuffle</button>
+        <button class="btn" id="albumBtn">Album order</button>
       </div>
-      <audio id="player" controls preload="metadata"></audio>
+      <audio id="player" controls preload="metadata" autoplay playsinline></audio>
     </div>
 
     <div class="panel" style="margin-top:14px">
       <div style="font-weight:800;margin-bottom:8px">Offline Mode</div>
-      <button id="offlineBtn" class="btn" style="font-weight:800">Turn Offline ON</button>
-      <div id="offInfo" style="margin-top:8px;opacity:.9">Offline caching: <span id="offCount">0 / 0 (0%)</span></div>
-      <div style="height:8px;background:#0f1826;border-radius:999px;margin:8px auto 0;max-width:520px;overflow:hidden">
-        <div id="offBar" style="height:100%;width:0%;background:var(--accent)"></div>
-      </div>
+      <button id="offlineBtn" class="btn">Turn Offline ON</button>
+      <div id="offInfo" style="opacity:.95;margin-top:8px">Offline caching: <span id="offCount">0 / 0 (0%)</span></div>
+      <div class="meter"><span id="offBar"></span></div>
       <div style="opacity:.85;margin-top:6px">Tap to save music for offline use…</div>
     </div>
 
@@ -71,12 +65,12 @@ a.button:hover{filter:brightness(1.05)}
   </div>
 
 <script>
-/* ---------------- CONFIG ---------------- */
+/* ---------- CONFIG ---------- */
 const CONFIG = {
   owner:'grandelement',
   repo:'radio',
   branch:'main',
-  folders:{ music:'music', id:'id', clips:'clips', img:'img' },
+  folders:{ music:'music', img:'img', id:'id', clips:'clips' },
   albumOrder:[
     'Grand Element - 2005 - Fundamental Groove',
     'Grand Element - 2006 - Trio',
@@ -92,214 +86,247 @@ const CONFIG = {
   ]
 };
 const GH_API = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/`;
-const RAW = (p)=>`https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/${p}`;
+const RAW    = (p)=>`https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/${p}`;
 
-/* ---------------- DOM ---------------- */
+/* ---------- DOM ---------- */
 const wall=document.getElementById('wall');
 const hud=document.getElementById('hud');
 const audio=document.getElementById('player');
 const nowEl=document.getElementById('now');
 const banner=document.getElementById('banner');
-const shuffleBtn=document.getElementById('shuffleBtn');
-const albumBtn=document.getElementById('albumBtn');
 const prevBtn=document.getElementById('prevBtn');
 const nextBtn=document.getElementById('nextBtn');
+const shuffleBtn=document.getElementById('shuffleBtn');
+const albumBtn=document.getElementById('albumBtn');
 const offBtn=document.getElementById('offlineBtn');
 const offBar=document.getElementById('offBar');
 const offCount=document.getElementById('offCount');
 
-/* ---------------- State ---------------- */
-let library=[];         // [{src, album, trackNo, track}]
-let order=[];           // playback order (array of refs from library)
-let i=0;                // index into order
-let shuffleOn=true;
-let swReady=false;
+/* ---------- State ---------- */
+let LIB=[];     // [{id, src, album, trackNo, title}]
+let ORDER=[];   // [idx into LIB]
+let cur=0;      // index into ORDER
+let shuffle=true; // default shuffle
 
-/* ---------------- Utils ---------------- */
-async function listDir(path){
-  const r=await fetch(GH_API+encodeURIComponent(path));
-  if(!r.ok) throw new Error(path+' not found');
-  return r.json();
-}
-function albumFromPath(path){
-  const m=path.match(/^music\/([^/]+)\//);
-  return m?decodeURIComponent(m[1]):'Unknown';
-}
-function parseTrack(filename){
-  // 'FundamentalGroove_02_Prelude.mp3' or '(02) Prelude.mp3' or '02 Prelude.mp3'
-  let base=filename.replace(/\.[^.]+$/,'');
-  base=base.replace(/[_-]+/g,' ').trim();
+/* ---------- Helpers ---------- */
+async function ls(path){ const r=await fetch(GH_API+encodeURIComponent(path),{cache:'no-store'}); if(!r.ok) throw new Error(path+' not found'); return r.json(); }
+function fisherYates(a){ a=a.slice(); for(let k=a.length-1;k>0;k--){const j=(Math.random()*(k+1))|0; [a[k],a[j]]=[a[j],a[k]];} return a; }
+function albumPretty(name){ return name.replace(/^Grand Element\s*-\s*\d{4}\s*-\s*/,''); }
+function keyFromAlbum(album){ return album.split('-').pop().trim().replace(/[^A-Za-z0-9]/g,''); } // "Sessions I"->"SessionsI"
+function parseFromName(filename, album){
+  let base=filename.replace(/\.[^.]+$/,'').replace(/[_]+/g,' ').replace(/\s+/g,' ').trim();
+  const key=keyFromAlbum(album);
+  if(base.toLowerCase().startsWith((key+' ').toLowerCase())) base=base.slice(key.length+1);
   let trackNo=null, title=base;
-  const m=base.match(/^\(?(\d{1,2})\)?\s+(.+)$/);
+  let m=base.match(/^\(?\s*(\d{1,2})\s*\)?[.\-\s_]+(.+)$/); if(!m) m=base.match(/^(\d{1,2})\s+(.+)$/);
   if(m){ trackNo=parseInt(m[1],10); title=m[2]; }
-  // normalize special cases
-  title=title.replace(/I\s*%3D\s*Energy|I\s*=\s*Energy/ig,'I = Energy');
-  return {trackNo, title:title.replace(/\s{2,}/g,' ').trim()};
+  title=title.replace(/I\s*(=|%3D)\s*Energy/ig,'I = Energy').replace(/\s{2,}/g,' ').trim();
+  return {trackNo,title};
 }
-function niceTitle(album,trackNo,title,withNo){
-  const dot=' • ';
-  return withNo && trackNo ? `${album}${dot}${String(trackNo).padStart(2,'0')}${dot}${title}`
-                           : `${album}${dot}${title}`;
+function titleText(item){
+  const dot=' • ', alb=albumPretty(item.album);
+  return shuffle ? `${alb}${dot}${item.title}` : `${alb}${dot}${item.trackNo?String(item.trackNo).padStart(2,'0')+dot:''}${item.title}`;
 }
+function rankAlbum(name){ const i=CONFIG.albumOrder.indexOf(name); return i<0?999:i; }
 
-/* ---------------- Library scan ---------------- */
-async function loadLibrary(){
-  const albums=CONFIG.albumOrder;
-  const lib=[];
-  for(const album of albums){
-    const dir=`${CONFIG.folders.music}/${album}`;
-    try{
-      const files=await listDir(dir);
-      for(const f of files){
-        if(!/\.(mp3|m4a|wav)$/i.test(f.name)) continue;
-        const meta=parseTrack(f.name);
-        lib.push({src:RAW(`${dir}/${f.name}`),album,trackNo:meta.trackNo,track:meta.title});
-      }
-    }catch(e){/* album might not exist yet; skip */}
-  }
-  // top-level singles (optional)
+/* ---------- Background ---------- */
+async function setRandomBackground(){
   try{
-    const files=await listDir(CONFIG.folders.music);
-    for(const f of files){
-      if(f.type==='file' && /\.(mp3|m4a|wav)$/i.test(f.name)){
-        const meta=parseTrack(f.name);
-        lib.push({src:RAW(`${CONFIG.folders.music}/${f.name}`),album:'Grand Element - Singles',trackNo:meta.trackNo,track:meta.title});
-      }
-    }
-  }catch(e){}
-  return lib;
-}
-async function pickBackground(){
-  try{
-    const files=await listDir(CONFIG.folders.img);
-    const imgs=files.filter(f=>/\.(gif|png|jpe?g|webp)$/i.test(f.name))
+    const files=await ls(CONFIG.folders.img);
+    const imgs=files.filter(f=>f.type==='file' && /\.(gif|png|jpe?g|webp)$/i.test(f.name) && f.name.toLowerCase()!=='logo.png')
                     .map(f=>RAW(`${CONFIG.folders.img}/${f.name}`));
-    if(imgs.length){
-      const pick=imgs[Math.floor(Math.random()*imgs.length)];
-      wall.style.backgroundImage=`url("${pick}")`;
-    }
-  }catch(e){}
+    if(imgs.length){ wall.style.backgroundImage=`url("${imgs[(Math.random()*imgs.length)|0]}")`; }
+  }catch(_e){}
 }
 
-/* ---------------- Playback ---------------- */
-function setOrder(keepCurrent=true){
-  const currentSrc=audio.src;
-  if(shuffleOn){
-    order=library.slice().sort(()=>Math.random()-0.5);
+/* ---------- Library ---------- */
+async function buildLibrary(){
+  const out=[];
+  for(const album of CONFIG.albumOrder){
+    try{
+      const files=await ls(`${CONFIG.folders.music}/${album}`);
+      const aud=files.filter(f=>f.type==='file' && /\.(mp3|m4a|wav)$/i.test(f.name))
+                     .sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
+      for(const f of aud){
+        const meta=parseFromName(f.name, album);
+        const rel=`${CONFIG.folders.music}/${album}/${f.name}`;
+        out.push({ id:rel, src:RAW(rel), album, trackNo:meta.trackNo, title:meta.title });
+      }
+    }catch(_e){}
+  }
+  try{ // top-level singles
+    const top=await ls(CONFIG.folders.music);
+    for(const f of top){
+      if(f.type==='file' && /\.(mp3|m4a|wav)$/i.test(f.name)){
+        const album='Grand Element - Singles';
+        const meta=parseFromName(f.name, album);
+        const rel=`${CONFIG.folders.music}/${f.name}`;
+        out.push({ id:rel, src:RAW(rel), album, trackNo:meta.trackNo, title:meta.title });
+      }
+    }
+  }catch(_e){}
+  return out;
+}
+
+/* ---------- Order / Playback ---------- */
+function rebuildOrder(keepSameId){
+  const currentId = keepSameId ? audio.dataset.id || null : null;
+  if(shuffle){
+    ORDER = fisherYates(LIB.map((_,i)=>i));
   }else{
-    const rank=Object.fromEntries(CONFIG.albumOrder.map((a,idx)=>[a,idx]));
-    order=library.slice().sort((a,b)=>{
-      const ra=(rank[a.album]??999)-(rank[b.album]??999); if(ra) return ra;
-      const ta=(a.trackNo??999)-(b.trackNo??999); if(ta) return ta;
-      return a.track.localeCompare(b.track);
+    ORDER = LIB.map((_,i)=>i).sort((a,b)=>{
+      const ra=rankAlbum(LIB[a].album)-rankAlbum(LIB[b].album); if(ra) return ra;
+      const ta=(LIB[a].trackNo??999)-(LIB[b].trackNo??999); if(ta) return ta;
+      return LIB[a].title.localeCompare(LIB[b].title,undefined,{numeric:true});
     });
   }
-  if(keepCurrent){
-    const idx=order.findIndex(o=>o.src===currentSrc);
-    i=idx>=0?idx:0;
+  if(currentId){
+    const keep = ORDER.findIndex(ix=>LIB[ix].id===currentId);
+    cur = keep>=0 ? keep : 0;
   }else{
-    i=0;
+    cur = 0;
   }
 }
-function showTitle(obj,withNo){ nowEl.textContent=niceTitle(obj.album,obj.trackNo,obj.track,withNo);
-  if('mediaSession' in navigator){
-    navigator.mediaSession.metadata=new MediaMetadata({title:obj.track,artist:'Grand Element',album:obj.album});
-  }
-}
-async function loadTrack(idx,{keepTime=false,force=false}={}){
-  if(!order.length) return;
-  const prev=order[i];
-  i=(idx+order.length)%order.length;
-  const cur=order[i];
+function paintTitle(){ if(ORDER.length) nowEl.textContent = titleText(LIB[ORDER[cur]]); }
+async function goto(newIndex,{keepTime=false, keepSrc=true}={}){
+  if(!ORDER.length) return;
+  const wasPaused=audio.paused;
+  const prevId=audio.dataset.id||'';
   const t=keepTime?audio.currentTime:0;
-  // Only swap source if different (prevents blips when toggling modes)
-  if(force || audio.src!==cur.src){ audio.src=cur.src; }
-  showTitle(cur,!shuffleOn);
+
+  cur=(newIndex+ORDER.length)%ORDER.length;
+  const item = LIB[ORDER[cur]];
+
+  const same = (prevId===item.id);
+  if(!keepSrc || !same){
+    audio.src=item.src;
+    audio.dataset.id=item.id; // tag current track by ID so toggles can keep it
+  }
+  paintTitle();
+
   try{
-    // if source unchanged and we’re just updating title, avoid nudging playback
-    if(force || audio.src!==prev?.src){ await audio.play(); }
-    if(keepTime && t>0) audio.currentTime=t;
-  }catch{}
+    if(!wasPaused || !same){ await audio.play(); }
+    if(keepTime && t>0) audio.currentTime = t;
+  }catch(_e){}
 }
 
-/* ---------------- UI ---------------- */
-function syncModeButtons(){
-  shuffleBtn.setAttribute('aria-pressed',String(shuffleOn));
-  albumBtn.setAttribute('aria-pressed',String(!shuffleOn));
-  if(shuffleOn){ shuffleBtn.classList.add('accent'); albumBtn.classList.remove('accent'); }
-  else{ albumBtn.classList.add('accent'); shuffleBtn.classList.remove('accent'); }
+/* ---------- UI (gapless mode switch) ---------- */
+function syncButtons(){
+  shuffleBtn.classList.toggle('on', shuffle);
+  albumBtn.classList.toggle('on', !shuffle);
 }
+prevBtn.addEventListener('click', ()=>goto(cur-1,{keepSrc:false}));
+nextBtn.addEventListener('click', ()=>goto(cur+1,{keepSrc:false}));
 
-prevBtn.addEventListener('click',()=>loadTrack(i-1));
-nextBtn.addEventListener('click',()=>loadTrack(i+1));
-
-shuffleBtn.addEventListener('click',async ()=>{
+shuffleBtn.addEventListener('click', ()=>{
+  if(shuffle) return;
   const t=audio.currentTime;
-  const src=audio.src;
-  shuffleOn=true; syncModeButtons(); setOrder(true);
-  // find same track, update title only; do not touch src so there’s no blip
-  const idx=order.findIndex(o=>o.src===src); if(idx>=0) i=idx;
-  showTitle(order[i],false);
-  // keep playing seamlessly
-  audio.currentTime=t;
+  shuffle=true; syncButtons();
+  rebuildOrder(true);  // keepSameId=true ensures same song stays selected
+  paintTitle();        // update title format (no track number)
+  if(!audio.paused) audio.currentTime=t; // no src change => no blip
+});
+albumBtn.addEventListener('click', ()=>{
+  if(!shuffle) return;
+  const t=audio.currentTime;
+  shuffle=false; syncButtons();
+  rebuildOrder(true);
+  paintTitle();        // adds track number in title if present
+  if(!audio.paused) audio.currentTime=t; // still same src
 });
 
-albumBtn.addEventListener('click',async ()=>{
-  const t=audio.currentTime;
-  const src=audio.src;
-  shuffleOn=false; syncModeButtons(); setOrder(true);
-  const idx=order.findIndex(o=>o.src===src); if(idx>=0) i=idx;
-  showTitle(order[i],true);
-  audio.currentTime=t;
-});
-
-audio.addEventListener('ended',()=>loadTrack(i+1,{force:true}));
+audio.addEventListener('ended', ()=>goto(cur+1,{keepSrc:false}));
 
 if('mediaSession' in navigator){
-  try{navigator.mediaSession.setActionHandler('previoustrack',()=>loadTrack(i-1,{force:true}))}catch{}
-  try{navigator.mediaSession.setActionHandler('nexttrack',()=>loadTrack(i+1,{force:true}))}catch{}
+  try{navigator.mediaSession.setActionHandler('previoustrack',()=>goto(cur-1,{keepSrc:false}))}catch{}
+  try{navigator.mediaSession.setActionHandler('nexttrack',()=>goto(cur+1,{keepSrc:false}))}catch{}
 }
 
-/* ---------------- Offline (existing service-worker.js) ---------------- */
-navigator.serviceWorker?.register('./service-worker.js',{scope:'./'}).then(()=>{swReady=true}).catch(()=>{});
-offBtn.addEventListener('click',()=>{
-  if(!swReady){alert('Offline not ready yet.');return;}
-  navigator.serviceWorker.controller?.postMessage({type:'CACHE_LIST',payload:{list:order.map(o=>o.src)}});
-  offBtn.textContent='Preparing offline…';
-});
-navigator.serviceWorker?.addEventListener('message',(ev)=>{
-  const {type,payload}=ev.data||{};
-  if(type==='CACHE_PROGRESS'){
-    const {done,total}=payload; const pct=total?Math.round(done*100/total):0;
-    offBar.style.width=pct+'%'; offCount.textContent=`${done} / ${total} (${pct}%)`;
-    if(done===total) offBtn.textContent='Offline ready';
+/* ---------- Offline (desktop + mobile) ---------- */
+function swReady(){
+  return new Promise(res=>{
+    if(!('serviceWorker' in navigator)) return res(null);
+    navigator.serviceWorker.register('./service-worker.js',{scope:'./'}).then(async reg=>{
+      const ready = await navigator.serviceWorker.ready;
+      res(ready.active || reg.active || null);
+    }).catch(()=>res(null));
+  });
+}
+let swActive=null;
+swReady().then(w=>{ swActive=w; });
+
+function swPost(msg){ if(swActive) swActive.postMessage(msg); }
+
+offBtn.addEventListener('click', ()=>{
+  if(!swActive){ alert('Offline not ready yet. Try reloading once.'); return; }
+  if(!offBtn.classList.contains('on')){
+    offBtn.textContent='Preparing offline…';
+    const list = LIB.map(x=>x.src); // cache ALL tracks
+    swPost({type:'CACHE_LIST', payload:{list}});
+  }else{
+    const ok = confirm('Turn Offline OFF and remove cached files from this device?');
+    if(ok){ swPost({type:'CLEAR_OFFLINE'}); }
   }
 });
 
-/* ---------------- Screensaver ---------------- */
-let idleTimer;
-function bump(){ hud.classList.remove('dim'); clearTimeout(idleTimer); idleTimer=setTimeout(()=>hud.classList.add('dim'),10000); }
-['mousemove','keydown','touchstart','click'].forEach(e=>window.addEventListener(e,bump,{passive:true}));
+navigator.serviceWorker?.addEventListener('message',(e)=>{
+  const {type,payload}=e.data||{};
+  if(type==='CACHE_PROGRESS'){
+    const {done=0,total=0}=payload||{};
+    const pct= total? Math.round(done/total*100) : 0;
+    offBar.style.width=pct+'%'; offCount.textContent=`${done} / ${total} (${pct}%)`;
+  }
+  if(type==='CACHE_DONE'){
+    offBtn.classList.add('on'); offBtn.textContent='Offline ready';
+  }
+  if(type==='CLEARED'){
+    offBtn.classList.remove('on'); offBtn.textContent='Turn Offline ON';
+    offBar.style.width='0%'; offCount.textContent='0 / 0 (0%)';
+  }
+});
 
-/* ---------------- Boot ---------------- */
+/* ---------- Screensaver fade (10s) ---------- */
+let idleTimer=null;
+function armFade(){ clearTimeout(idleTimer); hud.classList.remove('dim'); idleTimer=setTimeout(()=>hud.classList.add('dim'),10000); }
+['mousemove','touchstart','keydown','click'].forEach(ev=>addEventListener(ev,armFade,{passive:true}));
+
+/* ---------- Autoplay strategy ---------- */
+async function forceAutoplay(){
+  try{ await audio.play(); }
+  catch{
+    try{
+      audio.muted=true; await audio.play(); setTimeout(()=>{ audio.muted=false; audio.play().catch(()=>{}); }, 120);
+    }catch{
+      const unlock=()=>{ audio.muted=false; audio.play().catch(()=>{}); removeEventListener('touchstart',unlock); removeEventListener('click',unlock); removeEventListener('keydown',unlock); };
+      addEventListener('touchstart',unlock,{once:true,passive:true});
+      addEventListener('click',unlock,{once:true});
+      addEventListener('keydown',unlock,{once:true});
+    }
+  }
+}
+
+/* ---------- Boot ---------- */
 (async function boot(){
   try{
-    await pickBackground();
-    library=await loadLibrary();
-    if(!library.length){ banner.classList.remove('hidden'); banner.textContent='No audio found in music/'; return; }
+    await setRandomBackground();
+
+    LIB = await buildLibrary();
+    if(!LIB.length){ banner.classList.remove('hidden'); banner.textContent='No audio found in music/.'; return; }
     banner.classList.add('hidden');
-    setOrder(false); syncModeButtons(); await loadTrack(i,{force:true});
-    // best-effort autoplay; on iOS unlock at first tap
-    audio.play().catch(()=>{
-      const unlock=()=>{audio.play().catch(()=>{});window.removeEventListener('touchstart',unlock);window.removeEventListener('click',unlock);}
-      window.addEventListener('touchstart',unlock,{once:true,passive:true});
-      window.addEventListener('click',unlock,{once:true});
-    });
+
+    rebuildOrder(false);
+    // Start first track and tag it with an ID so toggles can keep the SAME song
+    await goto(cur,{keepSrc:false});
+    audio.dataset.id = LIB[ORDER[cur]].id;
+
+    // Kick autoplay (desktop starts; iOS starts on first tap)
+    await forceAutoplay();
+
   }catch(e){
-    banner.classList.remove('hidden'); banner.textContent='Error loading player';
     console.error(e);
+    banner.classList.remove('hidden'); banner.textContent='Error loading player';
   }
-  bump();
+  armFade();
 })();
 </script>
 </body>
