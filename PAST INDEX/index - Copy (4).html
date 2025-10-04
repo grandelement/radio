@@ -5,34 +5,26 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Grand Element Radio</title>
 <style>
-:root{--fg:#eaf6ff;--accent:#5ec5ff;--accent2:#ff6a00}
+:root{--fg:#eaf6ff;--accent:#5ec5ff;--accent2:#ff6a00;--glass:rgba(255,255,255,.06);--glass2:rgba(255,255,255,.02)}
 *{box-sizing:border-box} html,body{height:100%}
 body{margin:0;min-height:100vh;background:#000;color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
 #wall{position:fixed;inset:0;z-index:-1;background:#000 center/cover no-repeat fixed}
-
-/* content */
 .wrap{margin:auto;width:min(980px,94vw);padding:28px;text-align:center}
 #hud{transition:opacity .45s ease} #hud.dim{opacity:0}
-
 .logo{width:min(260px,60vw);height:auto;border-radius:50%;filter:drop-shadow(0 0 24px rgba(94,197,255,.55));margin:4px 0 12px}
 h1{margin:8px 0 2px;font-weight:800;letter-spacing:.3px}
 p.help{opacity:.95;margin:4px 0 10px}
-
-.panel{background:none;border:0;border-radius:0;padding:0;box-shadow:none;backdrop-filter:none}
+.panel{background:linear-gradient(180deg,var(--glass),var(--glass2));border:1px solid rgba(255,255,255,.10);border-radius:16px;padding:16px 14px;box-shadow:0 10px 30px rgba(0,0,0,.45);backdrop-filter:blur(2px)}
 .now{font-weight:800;margin:8px 0 12px;font-size:1.15rem;min-height:1.2em}
 .controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:8px 0 8px}
 .btn{appearance:none;border:1px solid rgba(255,255,255,.12);padding:10px 14px;border-radius:12px;background:#141d2b;color:#eaf6ff;cursor:pointer;font-weight:800;transition:.15s}
 .btn:hover{background:#1b2537}
 .btn.on{background:var(--accent);color:#03111b;border-color:transparent}
-
 audio{width:100%;margin-top:10px;transform:scale(1.15);transform-origin:center top}
-
 a.button{display:inline-block;padding:10px 18px;margin-top:14px;background:var(--accent2);color:#fff;text-decoration:none;border-radius:10px;font-weight:800;box-shadow:0 6px 16px rgba(255,106,0,.25)}
 a.button:hover{filter:brightness(1.05)}
 .err{color:#ff8a8a;margin:10px 0 0}
 .hidden{display:none}
-
-/* Offline meter + green state */
 .meter{height:8px;background:#0f1826;border-radius:999px;overflow:hidden;max-width:520px;margin:8px auto 0}
 .meter>span{display:block;height:100%;width:0%;background:var(--accent);transition:width .2s}
 #offlineBtn.on{background:#2ecc71 !important;color:#021 !important;border-color:transparent !important}
@@ -178,7 +170,7 @@ async function buildLibrary(){
 
 /* ---------- Order / Playback ---------- */
 function rebuildOrder(keepSameId){
-  const keepId = keepSameId ? (audio.dataset.id||null) : null;
+  const currentId = keepSameId ? audio.dataset.id || null : null;
   if(shuffle){
     ORDER = fisherYates(LIB.map((_,i)=>i));
   }else{
@@ -188,16 +180,14 @@ function rebuildOrder(keepSameId){
       return LIB[a].title.localeCompare(LIB[b].title,undefined,{numeric:true});
     });
   }
-  if(keepId){
-    const k = ORDER.findIndex(ix=>LIB[ix].id===keepId);
-    cur = k>=0 ? k : 0;
+  if(currentId){
+    const keep = ORDER.findIndex(ix=>LIB[ix].id===currentId);
+    cur = keep>=0 ? keep : 0;
   }else{
     cur = 0;
   }
 }
 function paintTitle(){ if(ORDER.length) nowEl.textContent = titleText(LIB[ORDER[cur]]); }
-
-/* Core: never change src for UI toggles; only when moving tracks */
 async function goto(newIndex,{keepTime=false, keepSrc=true}={}){
   if(!ORDER.length) return;
   const wasPaused=audio.paused;
@@ -210,7 +200,7 @@ async function goto(newIndex,{keepTime=false, keepSrc=true}={}){
   const same = (prevId===item.id);
   if(!keepSrc || !same){
     audio.src=item.src;
-    audio.dataset.id=item.id;
+    audio.dataset.id=item.id; // tag current track by ID so toggles can keep it
   }
   paintTitle();
 
@@ -230,19 +220,18 @@ nextBtn.addEventListener('click', ()=>goto(cur+1,{keepSrc:false}));
 
 shuffleBtn.addEventListener('click', ()=>{
   if(shuffle) return;
-  // keep SAME song & position; only change ordering + title style
   const t=audio.currentTime;
   shuffle=true; syncButtons();
-  rebuildOrder(true);
-  paintTitle();
-  if(!audio.paused) audio.currentTime=t; // do not touch src => no blip
+  rebuildOrder(true);  // keepSameId=true ensures same song stays selected
+  paintTitle();        // update title format (no track number)
+  if(!audio.paused) audio.currentTime=t; // no src change => no blip
 });
 albumBtn.addEventListener('click', ()=>{
   if(!shuffle) return;
   const t=audio.currentTime;
   shuffle=false; syncButtons();
   rebuildOrder(true);
-  paintTitle();
+  paintTitle();        // adds track number in title if present
   if(!audio.paused) audio.currentTime=t; // still same src
 });
 
@@ -253,7 +242,7 @@ if('mediaSession' in navigator){
   try{navigator.mediaSession.setActionHandler('nexttrack',()=>goto(cur+1,{keepSrc:false}))}catch{}
 }
 
-/* ---------- Offline (kept exactly as before) ---------- */
+/* ---------- Offline (desktop + mobile) ---------- */
 function swReady(){
   return new Promise(res=>{
     if(!('serviceWorker' in navigator)) return res(null);
@@ -301,7 +290,7 @@ let idleTimer=null;
 function armFade(){ clearTimeout(idleTimer); hud.classList.remove('dim'); idleTimer=setTimeout(()=>hud.classList.add('dim'),10000); }
 ['mousemove','touchstart','keydown','click'].forEach(ev=>addEventListener(ev,armFade,{passive:true}));
 
-/* ---------- Autoplay: stronger strategy ---------- */
+/* ---------- Autoplay strategy ---------- */
 async function forceAutoplay(){
   try{ await audio.play(); }
   catch{
@@ -325,12 +314,12 @@ async function forceAutoplay(){
     if(!LIB.length){ banner.classList.remove('hidden'); banner.textContent='No audio found in music/.'; return; }
     banner.classList.add('hidden');
 
-    // build initial order and start first track
     rebuildOrder(false);
+    // Start first track and tag it with an ID so toggles can keep the SAME song
     await goto(cur,{keepSrc:false});
-    audio.dataset.id = LIB[ORDER[cur]].id; // tag current id for gapless toggles
+    audio.dataset.id = LIB[ORDER[cur]].id;
 
-    // Kick autoplay on load; iOS will start on first tap/click
+    // Kick autoplay (desktop starts; iOS starts on first tap)
     await forceAutoplay();
 
   }catch(e){
