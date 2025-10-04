@@ -45,23 +45,18 @@ audio{
   margin-top:10px;
   position:relative;
   z-index:2;
-  min-height:48px;          /* ensure the play button panel is visible */
+  min-height:48px;
   transform:scale(1.15);
   transform-origin:center top;
 }
-/* Chrome desktop sometimes mis-renders when scaled; disable scale on wide screens */
-@media (min-width: 992px){
-  audio{ transform:none; }
-}
+@media (min-width: 992px){ audio{ transform:none; } }
 
-/* minor links/buttons */
 a.button{display:inline-block;padding:10px 18px;margin-top:14px;background:var(--accent2);color:#fff;text-decoration:none;border-radius:10px;font-weight:800;box-shadow:0 6px 16px rgba(255,106,0,.25)}
 a.button:hover{filter:brightness(1.05)}
 .err{color:#ff8a8a;margin:10px 0 0}
 .hidden{display:none}
 .smalllink{display:inline-block;margin-top:8px;opacity:.85;font-size:.9rem;cursor:pointer;text-decoration:underline}
 
-/* Offline meter + green state */
 .meter{height:8px;background:#0f1826;border-radius:999px;overflow:hidden;max-width:520px;margin:8px auto 0}
 .meter>span{display:block;height:100%;width:0%;background:var(--accent);transition:width .2s}
 #offlineBtn.on{background:#2ecc71 !important;color:#021 !important;border-color:transparent !important}
@@ -90,13 +85,11 @@ a.button:hover{filter:brightness(1.05)}
         <button class="btn" id="nextBtn">Next</button>
         <button class="btn on" id="shuffleBtn">Shuffle</button>
         <button class="btn" id="albumBtn">Album order</button>
-        <!-- Background controls -->
         <button class="btn" id="bgNextBtn" title="Change background">Change background</button>
         <button class="btn" id="bgModeBtn" title="Background mode">BG: Off</button>
       </div>
     </div>
 
-    <!-- Offline panel AFTER controls -->
     <div class="panel" style="margin-top:14px">
       <div style="font-weight:800;margin-bottom:8px">Offline Mode</div>
       <button id="offlineBtn" class="btn">Turn Offline ON</button>
@@ -162,7 +155,6 @@ let BG_IDX=-1;    // index into BG_LIST
 let BG_MODE=localStorage.getItem('GE_BG_MODE') || 'off'; // 'off' | 'per-song' | 'random'
 
 /* ---------- Helpers ---------- */
-// Cache directory listings to avoid GitHub rate-limit blips
 async function ls(path){
   const key='ls:'+path;
   const hit=sessionStorage.getItem(key);
@@ -179,7 +171,7 @@ async function ls(path){
 }
 function fisherYates(a){ a=a.slice(); for(let k=a.length-1;k>0;k--){const j=(Math.random()*(k+1))|0; [a[k],a[j]]=[a[j],a[k]];} return a; }
 function albumPretty(name){ return name.replace(/^Grand Element\s*-\s*\d{4}\s*-\s*/,''); }
-function keyFromAlbum(album){ return album.split('-').pop().trim().replace(/[^A-Za-z0-9]/g,''); } // "Sessions I"->"SessionsI"
+function keyFromAlbum(album){ return album.split('-').pop().trim().replace(/[^A-Za-z0-9]/g,''); }
 function parseFromName(filename, album){
   let base=filename.replace(/\.[^.]+$/,'').replace(/[_]+/g,' ').replace(/\s+/g,' ').trim();
   const key=keyFromAlbum(album);
@@ -187,9 +179,7 @@ function parseFromName(filename, album){
   let trackNo=null, title=base;
   let m=base.match(/^\(?\s*(\d{1,2})\s*\)?[.\-\s_]+(.+)$/); if(!m) m=base.match(/^(\d{1,2})\s+(.+)$/);
   if(m){ trackNo=parseInt(m[1],10); title=m[2]; }
-  // fallback: add spaces in camelCase (YouCantChangeMe -> You Cant Change Me)
   title = title.replace(/([a-z])([A-Z])/g,'$1 $2');
-  // normalize equals
   title=title.replace(/I\s*(=|%3D)\s*Energy/ig,'I = Energy').replace(/\s{2,}/g,' ').trim();
   return {trackNo,title};
 }
@@ -199,7 +189,7 @@ function titleText(item){
 }
 function rankAlbum(name){ const i=CONFIG.albumOrder.indexOf(name); return i<0?999:i; }
 
-/* ---------- Backgrounds ---------- */
+/* ---------- Backgrounds (LOCAL DISCOVERY) ---------- */
 function applyBackground(url){
   const isGif=/\.gif(\?|$)/i.test(url);
   const old=document.getElementById('bg-fixed');
@@ -213,25 +203,44 @@ function applyBackground(url){
     wall.style.backgroundImage=`url("${url}")`;
   }
 }
+function imgExists(url, timeout=800){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    const t=setTimeout(()=>{cleanup();reject();},timeout);
+    function cleanup(){ clearTimeout(t); img.onload=null; img.onerror=null; }
+    img.onload=()=>{cleanup(); resolve(url);};
+    img.onerror=()=>{cleanup(); reject();};
+    img.src=url;
+  });
+}
+async function discoverLocalBackgrounds(){
+  const exts=['gif','png','jpg','jpeg','webp'];
+  const max=60; // probe 1..60
+  const found=[];
+  for(let n=1;n<=max;n++){
+    let ok=false;
+    for(const ext of exts){
+      const url=`img/${n}.${ext}`;
+      try{ await imgExists(url); found.push(url); ok=true; break; }catch{}
+    }
+    // small yield to avoid blocking
+    await new Promise(r=>setTimeout(r,0));
+  }
+  // also include any explicit known assets if present
+  try{ await imgExists('img/blue-sun.png'); found.push('img/blue-sun.png'); }catch{}
+  // exclude logo
+  return found.filter(u=>!/img\/logo\.png$/i.test(u));
+}
 async function setRandomBackground(){
   try{
     if(!BG_LIST.length){
-      const files=await ls(CONFIG.folders.img);
-      BG_LIST=files
-        .filter(f=>f.type==='file' && /\.(gif|png|jpe?g|webp)$/i.test(f.name) && f.name.toLowerCase()!=='logo.png')
-        .map(f=>RAW(`${CONFIG.folders.img}/${f.name}`));
+      BG_LIST = await discoverLocalBackgrounds();
     }
-    // last-resort fallback if listing failed or folder is empty
-    if(!BG_LIST.length){
-      const fallback = 'img/logo.png';
-      try{ applyBackground(fallback); }catch{}
-      return;
-    }
+    if(!BG_LIST.length){ applyBackground('img/logo.png'); return; }
     if(BG_IDX<0) BG_IDX=(Math.random()*BG_LIST.length)|0;
     applyBackground(BG_LIST[BG_IDX]);
   }catch(_e){
-    // final fallback, keep page usable
-    try{ applyBackground('img/logo.png'); }catch{}
+    applyBackground('img/logo.png');
   }
 }
 function paintBgMode(){
@@ -275,7 +284,7 @@ async function buildLibrary(){
       }
     }catch(_e){}
   }
-  try{ // top-level singles
+  try{
     const top=await ls(CONFIG.folders.music);
     for(const f of top){
       if(f.type==='file' && /\.(mp3|m4a|wav)$/i.test(f.name)){
@@ -364,7 +373,7 @@ if('mediaSession' in navigator){
   try{navigator.mediaSession.setActionHandler('nexttrack',()=>{ goto(cur+1,{keepSrc:false}); bgAdvanceForMode(); })}catch{}
 }
 
-/* ---------- Offline (cancel/clear preserved) ---------- */
+/* ---------- Offline (progress + clear) ---------- */
 function swReady(){
   return new Promise(res=>{
     if(!('serviceWorker' in navigator)) return res(null);
