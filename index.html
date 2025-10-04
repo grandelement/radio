@@ -7,25 +7,32 @@
 <style>
 :root{--fg:#eaf6ff;--accent:#5ec5ff;--accent2:#ff6a00}
 *{box-sizing:border-box} html,body{height:100%}
-body{margin:0;min-height:100vh;background:#000;color:var(--fg);font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
-#wall {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background: #000 center/cover no-repeat;
-  background-attachment: fixed;
+
+/* Prevent mobile background scroll jitter */
+html,body{
+  margin:0; height:100%; overflow:hidden;
+  background:#000; color:var(--fg);
+  font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif;
 }
 
+/* fixed wallpaper layer */
+#wall{position:fixed;inset:0;z-index:-1;background:#000 center/cover no-repeat}
+#bg-fixed{
+  position:fixed; inset:0; z-index:-1;
+  width:100%; height:100%;
+  object-fit:cover; object-position:center;
+  pointer-events:none; transform:translateZ(0);
+}
 
 /* content */
-.wrap{margin:auto;width:min(980px,94vw);padding:28px;text-align:center}
+.wrap{margin:auto;width:min(980px,94vw);padding:28px;text-align:center; height:100%; overflow:auto}
 #hud{transition:opacity .45s ease} #hud.dim{opacity:0}
 
 .logo{width:min(260px,60vw);height:auto;border-radius:50%;filter:drop-shadow(0 0 24px rgba(94,197,255,.55));margin:4px 0 12px}
 h1{margin:8px 0 2px;font-weight:800;letter-spacing:.3px}
 p.help{opacity:.95;margin:4px 0 10px}
 
-.panel{background:none;border:0;border-radius:0;padding:0;box-shadow:none;backdrop-filter:none}
+.panel{background:none;border:0;border-radius:0;padding:0;box-shadow:none}
 .now{font-weight:800;margin:8px 0 12px;font-size:1.15rem;min-height:1.2em}
 .controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:8px 0 8px}
 .btn{appearance:none;border:1px solid rgba(255,255,255,.12);padding:10px 14px;border-radius:12px;background:#141d2b;color:#eaf6ff;cursor:pointer;font-weight:800;transition:.15s}
@@ -63,6 +70,9 @@ a.button:hover{filter:brightness(1.05)}
         <button class="btn" id="nextBtn">Next</button>
         <button class="btn on" id="shuffleBtn">Shuffle</button>
         <button class="btn" id="albumBtn">Album order</button>
+        <!-- NEW: Background controls -->
+        <button class="btn" id="bgNextBtn" title="Change background">Change background</button>
+        <button class="btn" id="bgModeBtn" title="Background mode">BG: Off</button>
       </div>
       <audio id="player" controls preload="metadata" autoplay playsinline></audio>
     </div>
@@ -116,6 +126,8 @@ const albumBtn=document.getElementById('albumBtn');
 const offBtn=document.getElementById('offlineBtn');
 const offBar=document.getElementById('offBar');
 const offCount=document.getElementById('offCount');
+const bgNextBtn=document.getElementById('bgNextBtn');
+const bgModeBtn=document.getElementById('bgModeBtn');
 
 /* ---------- State ---------- */
 let LIB=[];     // [{id, src, album, trackNo, title}]
@@ -123,8 +135,27 @@ let ORDER=[];   // [idx into LIB]
 let cur=0;      // index into ORDER
 let shuffle=true; // default shuffle
 
+// Backgrounds
+let BG_LIST=[];   // URLs
+let BG_IDX=-1;    // index into BG_LIST
+let BG_MODE=localStorage.getItem('GE_BG_MODE') || 'off'; // 'off' | 'per-song' | 'random'
+
 /* ---------- Helpers ---------- */
-async function ls(path){ const r=await fetch(GH_API+encodeURIComponent(path),{cache:'no-store'}); if(!r.ok) throw new Error(path+' not found'); return r.json(); }
+// Cache directory listings to avoid GitHub rate-limit blips
+async function ls(path){
+  const key='ls:'+path;
+  const hit=sessionStorage.getItem(key);
+  try{
+    const r=await fetch(GH_API+encodeURIComponent(path),{cache:'no-store'});
+    if(!r.ok) throw new Error(path+' not found');
+    const json=await r.json();
+    sessionStorage.setItem(key, JSON.stringify({t:Date.now(), json}));
+    return json;
+  }catch(e){
+    if(hit){ try{ return JSON.parse(hit).json; }catch(_){} }
+    throw e;
+  }
+}
 function fisherYates(a){ a=a.slice(); for(let k=a.length-1;k>0;k--){const j=(Math.random()*(k+1))|0; [a[k],a[j]]=[a[j],a[k]];} return a; }
 function albumPretty(name){ return name.replace(/^Grand Element\s*-\s*\d{4}\s*-\s*/,''); }
 function keyFromAlbum(album){ return album.split('-').pop().trim().replace(/[^A-Za-z0-9]/g,''); } // "Sessions I"->"SessionsI"
@@ -144,14 +175,57 @@ function titleText(item){
 }
 function rankAlbum(name){ const i=CONFIG.albumOrder.indexOf(name); return i<0?999:i; }
 
-/* ---------- Background ---------- */
+/* ---------- Backgrounds ---------- */
+function applyBackground(url){
+  const isGif=/\.gif(\?|$)/i.test(url);
+  const old=document.getElementById('bg-fixed');
+  if(old) old.remove();
+  if(isGif){
+    wall.style.backgroundImage='';
+    const img=document.createElement('img');
+    img.id='bg-fixed'; img.src=url; img.alt='';
+    document.body.appendChild(img);
+  }else{
+    wall.style.backgroundImage=`url("${url}")`;
+  }
+}
 async function setRandomBackground(){
-  try{
-    const files=await ls(CONFIG.folders.img);
-    const imgs=files.filter(f=>f.type==='file' && /\.(gif|png|jpe?g|webp)$/i.test(f.name) && f.name.toLowerCase()!=='logo.png')
-                    .map(f=>RAW(`${CONFIG.folders.img}/${f.name}`));
-    if(imgs.length){ wall.style.backgroundImage=`url("${imgs[(Math.random()*imgs.length)|0]}")`; }
-  }catch(_e){}
+  if(!BG_LIST.length){
+    try{
+      const files=await ls(CONFIG.folders.img);
+      BG_LIST=files
+        .filter(f=>f.type==='file' && /\.(gif|png|jpe?g|webp)$/i.test(f.name) && f.name.toLowerCase()!=='logo.png')
+        .map(f=>RAW(`${CONFIG.folders.img}/${f.name}`));
+    }catch(_e){}
+  }
+  if(!BG_LIST.length) return;
+  if(BG_IDX<0) BG_IDX=(Math.random()*BG_LIST.length)|0;
+  applyBackground(BG_LIST[BG_IDX]);
+}
+function paintBgMode(){
+  bgModeBtn.textContent = BG_MODE==='off' ? 'BG: Off' : (BG_MODE==='per-song' ? 'BG: Per-song' : 'BG: Random');
+}
+bgNextBtn?.addEventListener('click', ()=>{
+  if(!BG_LIST.length) return;
+  BG_IDX=(BG_IDX+1)%BG_LIST.length;
+  applyBackground(BG_LIST[BG_IDX]);
+});
+bgModeBtn?.addEventListener('click', ()=>{
+  BG_MODE = BG_MODE==='off' ? 'per-song' : (BG_MODE==='per-song' ? 'random' : 'off');
+  localStorage.setItem('GE_BG_MODE', BG_MODE);
+  paintBgMode();
+});
+function bgAdvanceForMode(){
+  if(!BG_LIST.length || BG_MODE==='off') return;
+  if(BG_MODE==='per-song'){
+    BG_IDX=(BG_IDX+1)%BG_LIST.length;
+  }else if(BG_MODE==='random'){
+    if(BG_LIST.length>1){
+      let n; do{ n=(Math.random()*BG_LIST.length)|0; }while(n===BG_IDX);
+      BG_IDX=n;
+    }
+  }
+  applyBackground(BG_LIST[BG_IDX]);
 }
 
 /* ---------- Library ---------- */
@@ -199,12 +273,11 @@ function rebuildOrder(keepSameId){
     const k = ORDER.findIndex(ix=>LIB[ix].id===keepId);
     cur = k>=0 ? k : 0;
   }else{
-    cur = 0;
+    cur=0;
   }
 }
 function paintTitle(){ if(ORDER.length) nowEl.textContent = titleText(LIB[ORDER[cur]]); }
 
-/* Core: never change src for UI toggles; only when moving tracks */
 async function goto(newIndex,{keepTime=false, keepSrc=true}={}){
   if(!ORDER.length) return;
   const wasPaused=audio.paused;
@@ -214,7 +287,7 @@ async function goto(newIndex,{keepTime=false, keepSrc=true}={}){
   cur=(newIndex+ORDER.length)%ORDER.length;
   const item = LIB[ORDER[cur]];
 
-  const same = (prevId===item.id);
+  const same=(prevId===item.id);
   if(!keepSrc || !same){
     audio.src=item.src;
     audio.dataset.id=item.id;
@@ -223,7 +296,7 @@ async function goto(newIndex,{keepTime=false, keepSrc=true}={}){
 
   try{
     if(!wasPaused || !same){ await audio.play(); }
-    if(keepTime && t>0) audio.currentTime = t;
+    if(keepTime && t>0) audio.currentTime=t;
   }catch(_e){}
 }
 
@@ -232,17 +305,16 @@ function syncButtons(){
   shuffleBtn.classList.toggle('on', shuffle);
   albumBtn.classList.toggle('on', !shuffle);
 }
-prevBtn.addEventListener('click', ()=>goto(cur-1,{keepSrc:false}));
-nextBtn.addEventListener('click', ()=>goto(cur+1,{keepSrc:false}));
+prevBtn.addEventListener('click', ()=>{ goto(cur-1,{keepSrc:false}); bgAdvanceForMode(); });
+nextBtn.addEventListener('click', ()=>{ goto(cur+1,{keepSrc:false}); bgAdvanceForMode(); });
 
 shuffleBtn.addEventListener('click', ()=>{
   if(shuffle) return;
-  // keep SAME song & position; only change ordering + title style
   const t=audio.currentTime;
   shuffle=true; syncButtons();
   rebuildOrder(true);
   paintTitle();
-  if(!audio.paused) audio.currentTime=t; // do not touch src => no blip
+  if(!audio.paused) audio.currentTime=t;
 });
 albumBtn.addEventListener('click', ()=>{
   if(!shuffle) return;
@@ -250,17 +322,17 @@ albumBtn.addEventListener('click', ()=>{
   shuffle=false; syncButtons();
   rebuildOrder(true);
   paintTitle();
-  if(!audio.paused) audio.currentTime=t; // still same src
+  if(!audio.paused) audio.currentTime=t;
 });
 
-audio.addEventListener('ended', ()=>goto(cur+1,{keepSrc:false}));
+audio.addEventListener('ended', ()=>{ goto(cur+1,{keepSrc:false}); bgAdvanceForMode(); });
 
 if('mediaSession' in navigator){
-  try{navigator.mediaSession.setActionHandler('previoustrack',()=>goto(cur-1,{keepSrc:false}))}catch{}
-  try{navigator.mediaSession.setActionHandler('nexttrack',()=>goto(cur+1,{keepSrc:false}))}catch{}
+  try{navigator.mediaSession.setActionHandler('previoustrack',()=>{ goto(cur-1,{keepSrc:false}); bgAdvanceForMode(); })}catch{}
+  try{navigator.mediaSession.setActionHandler('nexttrack',()=>{ goto(cur+1,{keepSrc:false}); bgAdvanceForMode(); })}catch{}
 }
 
-/* ---------- Offline (kept exactly as before) ---------- */
+/* ---------- Offline (unchanged behavior) ---------- */
 function swReady(){
   return new Promise(res=>{
     if(!('serviceWorker' in navigator)) return res(null);
@@ -272,7 +344,6 @@ function swReady(){
 }
 let swActive=null;
 swReady().then(w=>{ swActive=w; });
-
 function swPost(msg){ if(swActive) swActive.postMessage(msg); }
 
 offBtn.addEventListener('click', ()=>{
@@ -286,7 +357,6 @@ offBtn.addEventListener('click', ()=>{
     if(ok){ swPost({type:'CLEAR_OFFLINE'}); }
   }
 });
-
 navigator.serviceWorker?.addEventListener('message',(e)=>{
   const {type,payload}=e.data||{};
   if(type==='CACHE_PROGRESS'){
@@ -308,7 +378,7 @@ let idleTimer=null;
 function armFade(){ clearTimeout(idleTimer); hud.classList.remove('dim'); idleTimer=setTimeout(()=>hud.classList.add('dim'),10000); }
 ['mousemove','touchstart','keydown','click'].forEach(ev=>addEventListener(ev,armFade,{passive:true}));
 
-/* ---------- Autoplay: stronger strategy ---------- */
+/* ---------- Autoplay ---------- */
 async function forceAutoplay(){
   try{ await audio.play(); }
   catch{
@@ -327,17 +397,16 @@ async function forceAutoplay(){
 (async function boot(){
   try{
     await setRandomBackground();
+    paintBgMode();
 
     LIB = await buildLibrary();
     if(!LIB.length){ banner.classList.remove('hidden'); banner.textContent='No audio found in music/.'; return; }
     banner.classList.add('hidden');
 
-    // build initial order and start first track
     rebuildOrder(false);
     await goto(cur,{keepSrc:false});
-    audio.dataset.id = LIB[ORDER[cur]].id; // tag current id for gapless toggles
+    audio.dataset.id = LIB[ORDER[cur]].id;
 
-    // Kick autoplay on load; iOS will start on first tap/click
     await forceAutoplay();
 
   }catch(e){
