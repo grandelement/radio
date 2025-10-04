@@ -1,376 +1,47 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Grand Element Radio</title>
-<style>
-:root{--fg:#eaf6ff;--accent:#5ec5ff;--accent2:#ff6a00}
-*{box-sizing:border-box} html,body{height:100%}
-html,body{margin:0;height:100%;overflow:hidden;background:#000;color:var(--fg);
-  font-family:system-ui,Segoe UI,Roboto,Arial,sans-serif}
-
-/* fixed wallpaper layers */
-#wall{position:fixed;inset:0;z-index:-1;background:#000 center/cover no-repeat}
-#bg-fixed{position:fixed;inset:0;z-index:-1;width:100%;height:100%;
-  object-fit:cover;object-position:center;pointer-events:none;transform:translateZ(0)}
-
-/* content (scrolls) */
-.wrap{margin:auto;width:min(980px,94vw);padding:28px;text-align:center;height:100%;overflow:auto}
-#hud{transition:opacity .45s ease} #hud.dim{opacity:0}
-
-.logo{width:min(260px,60vw);height:auto;border-radius:50%;
-  filter:drop-shadow(0 0 24px rgba(94,197,255,.55));margin:4px 0 12px}
-h1{margin:8px 0 2px;font-weight:800;letter-spacing:.3px}
-p.help{opacity:.95;margin:4px 0 10px}
-
-.panel{background:none;border:0;border-radius:0;padding:0;box-shadow:none}
-.now{font-weight:800;margin:8px 0 12px;font-size:1.15rem;min-height:1.2em}
-
-/* audio must stay visible; keep play button visible on desktop & mobile */
-audio{width:100%;margin-top:10px;position:relative;z-index:2;min-height:48px}
-@media (min-width:992px){audio{transform:none}}
-
-.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px 0 0}
-.btn{appearance:none;border:1px solid rgba(255,255,255,.12);padding:10px 14px;border-radius:12px;
-  background:#141d2b;color:#eaf6ff;cursor:pointer;font-weight:800;transition:.15s}
-.btn:hover{background:#1b2537}.btn.on{background:var(--accent);color:#03111b;border-color:transparent}
-a.button{display:inline-block;padding:10px 18px;margin-top:14px;background:var(--accent2);color:#fff;
-  text-decoration:none;border-radius:10px;font-weight:800;box-shadow:0 6px 16px rgba(255,106,0,.25)}
-a.button:hover{filter:brightness(1.05)} .err{color:#ff8a8a;margin:10px 0 0}
-.smalllink{display:inline-block;margin-top:8px;opacity:.85;font-size:.9rem;cursor:pointer;text-decoration:underline}
-
-.meter{height:8px;background:#0f1826;border-radius:999px;overflow:hidden;max-width:520px;margin:8px auto 0}
-.meter>span{display:block;height:100%;width:0%;background:var(--accent);transition:width .2s}
-#offlineBtn.on{background:#2ecc71 !important;color:#021 !important;border-color:transparent !important}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GE Background</title>
+  <meta name="robots" content="noindex" />
+  <style>
+    /* Full-bleed black canvas */
+    html,body{height:100%;margin:0}
+    body{
+      background:#000 center/cover no-repeat fixed;
+    }
+    /* Optional: fade-in so swaps feel smooth */
+    .fade{
+      animation:fadein .6s ease both;
+    }
+    @keyframes fadein{from{opacity:0}to{opacity:1}}
+  </style>
 </head>
-<body>
-  <div id="wall"></div>
-
-  <div id="hud" class="wrap">
-    <img src="img/logo.png" alt="Grand Element" class="logo" onerror="this.style.display='none'"/>
-    <h1>Grand Element Radio</h1>
-    <p class="help">Music created to help set your soul free. Enjoy!!</p>
-    <p class="help">Refresh the page for a new experience.</p>
-
-    <div id="banner" class="err" style="display:none">Error loading player</div>
-
-    <div class="panel">
-      <div id="now" class="now">Loading…</div>
-
-      <!-- Native progress bar -->
-      <audio id="player" controls preload="metadata" autoplay playsinline></audio>
-
-      <!-- Controls under the bar -->
-      <div class="controls">
-        <button class="btn" id="prevBtn">Prev</button>
-        <button class="btn" id="nextBtn">Next</button>
-        <button class="btn on" id="shuffleBtn">Shuffle</button>
-        <button class="btn" id="albumBtn">Album order</button>
-        <button class="btn" id="bgNextBtn" title="Change background">Change background</button>
-        <button class="btn" id="bgModeBtn" title="Background mode">BG: Off</button>
-      </div>
-    </div>
-
-    <!-- Offline section -->
-    <div class="panel" style="margin-top:14px">
-      <div style="font-weight:800;margin-bottom:8px">Offline Mode</div>
-      <button id="offlineBtn" class="btn">Turn Offline ON</button>
-      <div id="offInfo" style="opacity:.95;margin-top:8px">Offline caching: <span id="offCount">0 / 0 (0%)</span></div>
-      <div class="meter"><span id="offBar"></span></div>
-      <div class="smalllink" id="clearSite">Clear site cache & reload</div>
-    </div>
-
-    
-    <p style="opacity:.95;margin:0 0 6px">If you’d like to support the project, you can purchase the music below.</p>
-
-    <p style="opacity:.95;margin:16px 0 4px">Much Love!!</p>
-
-    <a class="button" href="https://grandelement.bandcamp.com" target="_blank" rel="noopener">Buy on Bandcamp</a>
-  </div>
-
+<body class="fade">
 <script>
-/* ===================== CONFIG ===================== */
-const CONFIG = {
-  owner:'grandelement',
-  repo:'radio',
-  branch:'main',
-  folders:{ music:'music', img:'img' },
-  albumOrder:[
-    'Grand Element - 2005 - Fundamental Groove',
-    'Grand Element - 2006 - Trio',
-    'Grand Element - 2007 - Live',
-    'Grand Element - 2008 - Sessions I',
-    'Grand Element - 2009 - Sessions II',
-    'Grand Element - 2010 - Intergy',
-    'Grand Element - 2011 - Love',
-    'Grand Element - 2017 - Soul',
-    'Grand Element - 2021 - Spirit',
-    'Grand Element - 2024 - Fire',
-    'Grand Element - Singles'
-  ]
-};
+/*
+  === HOW TO USE ===
+  1) Put your images in /img/ (same repo).
+  2) Edit the list below so it matches your filenames.
+  3) Each reload shows one at random. That's it.
+*/
 
-const RAW =(p)=>`https://raw.githubusercontent.com/${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/${p}`;
-const GH_API_CONTENTS = `https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/contents/`;
+const BACKGROUNDS = [
+  // ---- EDIT THESE LINES (add/remove) ----
+  "img/1.gif",
+  "img/5.gif",
+  "img/logo.png"
+  // ---------------------------------------
+];
 
-/* ===================== DOM ===================== */
-const wall=document.getElementById('wall');
-const hud=document.getElementById('hud');
-const audio=document.getElementById('player');
-const nowEl=document.getElementById('now');
-const banner=document.getElementById('banner');
-const prevBtn=document.getElementById('prevBtn');
-const nextBtn=document.getElementById('nextBtn');
-const shuffleBtn=document.getElementById('shuffleBtn');
-const albumBtn=document.getElementById('albumBtn');
-const offBtn=document.getElementById('offlineBtn');
-const offBar=document.getElementById('offBar');
-const offCount=document.getElementById('offCount');
-const clearSite=document.getElementById('clearSite');
-const bgNextBtn=document.getElementById('bgNextBtn');
-const bgModeBtn=document.getElementById('bgModeBtn');
-
-/* ===================== State ===================== */
-let LIB=[];     // [{id, src, album, trackNo, title}]
-let ORDER=[];   // [idx]
-let cur=0;
-let shuffle=true;
-
-let BG_LIST=[];   // backgrounds
-let BG_IDX=-1;
-let BG_MODE=localStorage.getItem('GE_BG_MODE') || 'off'; // 'off'|'per-song'|'random'
-
-/* ===================== Helpers ===================== */
-async function ls(path){
-  const key='ls:'+path, hit=sessionStorage.getItem(key);
-  try{
-    const r=await fetch(GH_API_CONTENTS+encodeURIComponent(path),{cache:'no-store'});
-    if(!r.ok) throw new Error(path+' not found');
-    const json=await r.json();
-    sessionStorage.setItem(key, JSON.stringify(json));
-    return json;
-  }catch(e){
-    if(hit){ try{return JSON.parse(hit)}catch{} }
-    throw e;
-  }
-}
-function fisherYates(a){ a=a.slice(); for(let k=a.length-1;k>0;k--){const j=(Math.random()*(k+1))|0; [a[k],a[j]]=[a[j],a[k]];} return a; }
-function albumPretty(name){ return name.replace(/^Grand Element\s*-\s*\d{4}\s*-\s*/,''); }
-function keyFromAlbum(album){ return album.split('-').pop().trim().replace(/[^A-Za-z0-9]/g,''); }
-function parseFromName(filename, album){
-  let base=filename.replace(/\.[^.]+$/,'').replace(/[_]+/g,' ').replace(/\s+/g,' ').trim();
-  const key=keyFromAlbum(album); if(base.toLowerCase().startsWith((key+' ').toLowerCase())) base=base.slice(key.length+1);
-  let trackNo=null, title=base; let m=base.match(/^\(?\s*(\d{1,2})\s*\)?[.\-\s_]+(.+)$/)||base.match(/^(\d{1,2})\s+(.+)$/);
-  if(m){ trackNo=parseInt(m[1],10); title=m[2]; }
-  title=title.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/I\s*(=|%3D)\s*Energy/ig,'I = Energy').replace(/\s{2,}/g,' ').trim();
-  return {trackNo,title};
-}
-function titleText(item){
-  const dot=' • ', alb=albumPretty(item.album);
-  return shuffle ? `${alb}${dot}${item.title}` : `${alb}${dot}${item.trackNo?String(item.trackNo).padStart(2,'0')+dot:''}${item.title}`;
-}
-function rankAlbum(name){ const i=CONFIG.albumOrder.indexOf(name); return i<0?999:i; }
-
-/* ===================== Backgrounds (Tree API) ===================== */
-async function listImagesFromRepo(){
-  const cache='GE_IMG_TREE'; const hit=sessionStorage.getItem(cache);
-  if(hit){ try{return JSON.parse(hit)}catch{} }
-  const url=`https://api.github.com/repos/${CONFIG.owner}/${CONFIG.repo}/git/trees/${CONFIG.branch}?recursive=1`;
-  const r=await fetch(url,{cache:'no-store'}); if(!r.ok) throw new Error('tree failed');
-  const data=await r.json(); const files=(data.tree||[]).filter(n=>n.type==='blob' && /^img\//i.test(n.path)).map(n=>n.path);
-  sessionStorage.setItem(cache, JSON.stringify(files)); return files;
-}
-function applyBackground(url){
-  const isGif=/\.gif(\?|$)/i.test(url);
-  const old=document.getElementById('bg-fixed'); if(old) old.remove();
-  if(isGif){
-    const img=document.createElement('img'); img.id='bg-fixed'; img.src=url; img.alt='';
-    document.body.appendChild(img);
-    const w=wall; if(w) w.style.backgroundImage='';
-  }else{
-    wall.style.backgroundImage=`url("${url}")`;
-  }
-}
-async function ensureBackgroundList(){
-  if(BG_LIST.length) return;
-  try{
-    const paths=await listImagesFromRepo();
-    BG_LIST=paths.filter(p=>/\.(gif|png|jpe?g|webp)$/i.test(p)&&p.toLowerCase()!=='img/logo.png').map(p=>RAW(p));
-    if(!BG_LIST.length) BG_LIST=['img/logo.png'];
-  }catch{ BG_LIST=['img/logo.png']; }
-}
-async function setRandomBackground(){
-  await ensureBackgroundList();
-  if(BG_IDX<0) BG_IDX=(Math.random()*BG_LIST.length)|0;
-  applyBackground(BG_LIST[BG_IDX]);
-}
-function paintBgMode(){
-  bgModeBtn.textContent = BG_MODE==='off' ? 'BG: Off' : (BG_MODE==='per-song' ? 'BG: Per-song' : 'BG: Random');
-}
-bgNextBtn.addEventListener('click', async ()=>{
-  await ensureBackgroundList(); BG_IDX=(BG_IDX+1)%BG_LIST.length; applyBackground(BG_LIST[BG_IDX]);
-});
-bgModeBtn.addEventListener('click', ()=>{
-  BG_MODE = BG_MODE==='off' ? 'per-song' : (BG_MODE==='per-song' ? 'random' : 'off');
-  localStorage.setItem('GE_BG_MODE', BG_MODE); paintBgMode();
-});
-function bgAdvanceForMode(){
-  if(!BG_LIST.length || BG_MODE==='off') return;
-  if(BG_MODE==='per-song'){ BG_IDX=(BG_IDX+1)%BG_LIST.length; }
-  else if(BG_MODE==='random'){ if(BG_LIST.length>1){ let n; do{n=(Math.random()*BG_LIST.length)|0}while(n===BG_IDX); BG_IDX=n; } }
-  applyBackground(BG_LIST[BG_IDX]);
-}
-
-/* ===================== Library / Order ===================== */
-async function buildLibrary(){
-  const out=[];
-  for(const album of CONFIG.albumOrder){
-    try{
-      const files=await ls(`${CONFIG.folders.music}/${album}`);
-      const aud=files.filter(f=>f.type==='file' && /\.(mp3|m4a|wav)$/i.test(f.name))
-                     .sort((a,b)=>a.name.localeCompare(b.name,undefined,{numeric:true}));
-      for(const f of aud){
-        const meta=parseFromName(f.name, album);
-        const rel=`${CONFIG.folders.music}/${album}/${f.name}`;
-        out.push({ id:rel, src:RAW(rel), album, trackNo:meta.trackNo, title:meta.title });
-      }
-    }catch(_e){}
-  }
-  // top-level singles
-  try{
-    const top=await ls(CONFIG.folders.music);
-    for(const f of top){
-      if(f.type==='file' && /\.(mp3|m4a|wav)$/i.test(f.name)){
-        const album='Grand Element - Singles';
-        const meta=parseFromName(f.name, album);
-        const rel=`${CONFIG.folders.music}/${f.name}`;
-        out.push({ id:rel, src:RAW(rel), album, trackNo:meta.trackNo, title:meta.title });
-      }
-    }
-  }catch(_e){}
-  return out;
-}
-function rebuildOrder(keepSameId){
-  const keepId = keepSameId ? (audio.dataset.id||null) : null;
-  if(shuffle){
-    ORDER=fisherYates(LIB.map((_,i)=>i));
-  }else{
-    ORDER=LIB.map((_,i)=>i).sort((a,b)=>{
-      const ra=rankAlbum(LIB[a].album)-rankAlbum(LIB[b].album); if(ra) return ra;
-      const ta=(LIB[a].trackNo??999)-(LIB[b].trackNo??999); if(ta) return ta;
-      return LIB[a].title.localeCompare(LIB[b].title,undefined,{numeric:true});
-    });
-  }
-  cur = keepId ? Math.max(0, ORDER.findIndex(ix=>LIB[ix].id===keepId)) : 0;
-}
-function paintTitle(){ if(ORDER.length) nowEl.textContent=titleText(LIB[ORDER[cur]]); }
-
-async function goto(newIndex,{keepTime=false, keepSrc=true}={}){
-  if(!ORDER.length) return;
-  const wasPaused=audio.paused; const prevId=audio.dataset.id||''; const t=keepTime?audio.currentTime:0;
-  cur=(newIndex+ORDER.length)%ORDER.length; const item=LIB[ORDER[cur]];
-  const same=(prevId===item.id);
-  if(!keepSrc || !same){ audio.src=item.src; audio.dataset.id=item.id; }
-  paintTitle();
-  try{
-    if(!wasPaused || !same){ await audio.play(); }
-    if(keepTime && t>0) audio.currentTime=t;
-  }catch(_){}
-}
-
-/* ===================== UI (gapless mode switch) ===================== */
-function syncButtons(){ shuffleBtn.classList.toggle('on',shuffle); albumBtn.classList.toggle('on',!shuffle); }
-prevBtn.addEventListener('click', ()=>{ goto(cur-1,{keepSrc:false}); bgAdvanceForMode(); });
-nextBtn.addEventListener('click', ()=>{ goto(cur+1,{keepSrc:false}); bgAdvanceForMode(); });
-shuffleBtn.addEventListener('click', ()=>{ if(shuffle) return; const t=audio.currentTime; shuffle=true; syncButtons(); rebuildOrder(true); paintTitle(); if(!audio.paused) audio.currentTime=t; });
-albumBtn.addEventListener('click',  ()=>{ if(!shuffle) return; const t=audio.currentTime; shuffle=false;syncButtons(); rebuildOrder(true); paintTitle(); if(!audio.paused) audio.currentTime=t; });
-audio.addEventListener('ended', ()=>{ goto(cur+1,{keepSrc:false}); bgAdvanceForMode(); });
-if('mediaSession' in navigator){
-  try{navigator.mediaSession.setActionHandler('previoustrack',()=>{ goto(cur-1,{keepSrc:false}); bgAdvanceForMode(); })}catch{}
-  try{navigator.mediaSession.setActionHandler('nexttrack',()=>{ goto(cur+1,{keepSrc:false}); bgAdvanceForMode(); })}catch{}
-}
-
-/* ===================== Offline (with clear) ===================== */
-function swReady(){ return new Promise(res=>{ if(!('serviceWorker'in navigator)) return res(null);
-  navigator.serviceWorker.register('./service-worker.js',{scope:'./'}).then(async reg=>{
-    const ready=await navigator.serviceWorker.ready; res(ready.active||reg.active||null);
-  }).catch(()=>res(null)); }); }
-let swActive=null, caching=false; swReady().then(w=>{swActive=w});
-function swPost(msg){ if(swActive) swActive.postMessage(msg); }
-
-offBtn.addEventListener('click', ()=>{
-  if(!swActive){ alert('Offline not ready yet. Try reloading once.'); return; }
-  if(!offBtn.classList.contains('on') && !caching){
-    caching=true; offBtn.textContent='Preparing offline… (tap to cancel)';
-    swPost({type:'CACHE_LIST', payload:{list:LIB.map(x=>x.src)}});
-  }else if(caching){
-    if(confirm('Cancel offline download and remove any partial files?')) swPost({type:'CLEAR_OFFLINE'});
-  }else{
-    if(confirm('Turn Offline OFF and remove cached files from this device?')) swPost({type:'CLEAR_OFFLINE'});
-  }
-});
-navigator.serviceWorker?.addEventListener('message',(e)=>{
-  const {type,payload}=e.data||{};
-  if(type==='CACHE_PROGRESS'){
-    const {done=0,total=0}=payload||{}; const pct= total? Math.round(done/total*100) : 0;
-    offBar.style.width=pct+'%'; offCount.textContent=`${done} / ${total} (${pct}%)`;
-  }
-  if(type==='CACHE_DONE'){ caching=false; offBtn.classList.add('on'); offBtn.textContent='Offline ready'; }
-  if(type==='CLEARED'){ caching=false; offBtn.classList.remove('on'); offBtn.textContent='Turn Offline ON';
-    offBar.style.width='0%'; offCount.textContent='0 / 0 (0%)'; }
-});
-clearSite.addEventListener('click', async (e)=>{
-  e.preventDefault();
-  try{
-    if('caches'in window){ const ks=await caches.keys(); await Promise.all(ks.map(k=>caches.delete(k))); }
-    if('serviceWorker'in navigator){ const regs=await navigator.serviceWorker.getRegistrations(); await Promise.all(regs.map(r=>r.unregister())); }
-  }catch(_){}
-  location.reload();
-});
-
-/* ===================== Screensaver fade (10s) ===================== */
-let idleTimer=null;
-function armFade(){ clearTimeout(idleTimer); hud.classList.remove('dim'); idleTimer=setTimeout(()=>hud.classList.add('dim'),10000); }
-['mousemove','touchstart','keydown','click'].forEach(ev=>addEventListener(ev,armFade,{passive:true}));
-
-/* ===================== Autoplay (iOS-friendly) ===================== */
-async function forceAutoplay(){
-  try{ await audio.play(); }
-  catch{
-    try{
-      audio.muted=true; await audio.play();
-      setTimeout(()=>{ audio.muted=false; audio.play().catch(()=>{}); }, 120);
-    }catch{
-      const unlock=()=>{ audio.muted=false; audio.play().catch(()=>{}); removeEventListener('touchstart',unlock); removeEventListener('click',unlock); removeEventListener('keydown',unlock); };
-      addEventListener('touchstart',unlock,{once:true,passive:true});
-      addEventListener('click',unlock,{once:true});
-      addEventListener('keydown',unlock,{once:true});
-    }
-  }
-}
-
-/* ===================== Boot ===================== */
-(async function boot(){
-  try{
-    await setRandomBackground(); // sets BG_LIST and first background
-    paintBgMode();
-
-    LIB = await buildLibrary();
-    if(!LIB.length){ banner.style.display='block'; banner.textContent='No audio found in music/.'; return; }
-    banner.style.display='none';
-
-    rebuildOrder(false);
-    await goto(cur,{keepSrc:false});
-    audio.dataset.id = LIB[ORDER[cur]].id;
-
-    await forceAutoplay();
-  }catch(e){
-    console.error(e);
-    banner.style.display='block'; banner.textContent='Error loading player';
-  }
-  armFade();
+// Choose a random image
+(function setRandomBackground(){
+  if (!BACKGROUNDS.length) return;
+  const pick = BACKGROUNDS[Math.floor(Math.random()*BACKGROUNDS.length)];
+  // Bust hard cache for GIFs when you want—toggle to true if needed.
+  const bust = /\\.gif$/i.test(pick) ? (`${pick}?t=`+Date.now()) : pick;
+  document.body.style.backgroundImage = `url("${bust}")`;
 })();
 </script>
 </body>
